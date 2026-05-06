@@ -21,10 +21,10 @@
             padding: 30px; 
             border-radius: 8px; 
             box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
-            border-top: 6px solid #1C2D5A; /* Delft Blue */
+            border-top: 6px solid #1C2D5A; /* Delft Blue PosIND */
         }
         
-        /* Pengaturan Logo */
+        /* Area Logo */
         .logo-header {
             display: flex;
             justify-content: space-between;
@@ -37,7 +37,7 @@
         .logo-posind { height: 40px; }
 
         h2 { color: #1C2D5A; margin-top: 0; }
-        .accent { color: #EF4123; /* Cinnabar */ }
+        .accent { color: #EF4123; /* Cinnabar PosIND */ }
         .form-group { margin-bottom: 20px; }
         label { font-weight: bold; display: block; margin-bottom: 8px; color: #1C2D5A; }
         select { 
@@ -47,10 +47,11 @@
             border-radius: 4px; 
             font-size: 15px; 
             outline: none;
+            cursor: pointer;
         }
         select:focus { border-color: #1C2D5A; }
         
-        /* Pengaturan Area Upload & Drag-Drop */
+        /* Area Upload Drag & Drop */
         .upload-area { 
             border: 2px dashed #ccc; 
             padding: 40px 20px; 
@@ -67,7 +68,7 @@
             border-color: #EF4123;
             transform: scale(1.02);
         }
-        input[type="file"] { display: none; } /* Sembunyikan input default */
+        input[type="file"] { display: none; }
         .upload-label-btn {
             background-color: #fff;
             border: 1px solid #1C2D5A;
@@ -80,7 +81,7 @@
         }
         
         button { 
-            background-color: #EF4123; /* Cinnabar */
+            background-color: #EF4123; 
             color: white; 
             border: none; 
             padding: 12px 24px; 
@@ -93,7 +94,7 @@
         }
         button:hover { background-color: #d1371c; }
         button:disabled { background-color: #ccc; cursor: not-allowed; }
-        #downloadBtn { background-color: #1C2D5A; /* Delft Blue */ }
+        #downloadBtn { background-color: #1C2D5A; }
         #downloadBtn:hover { background-color: #131e3d; }
         #status { margin-top: 15px; font-weight: bold; color: #2c3e50; }
         .note { font-size: 13px; color: #7f8c8d; margin-top: 10px; }
@@ -109,11 +110,11 @@
     </div>
 
     <h2>Alat Perapih Data <span class="accent">PosIND</span></h2>
-    <p>Upload file CSV dari sistem, lalu download hasil Excel yang sudah <strong>terformat rapi (auto-width, warna header Delft Blue, & separator angka universal)</strong>.</p>
+    <p>Upload file CSV dari sistem, lalu download hasil Excel yang terformat rapi (auto-width, header Delft Blue, & separator ribuan).</p>
 
     <div class="form-group">
         <label for="fileType">Pilih Jenis Data yang Akan Dirapikan:</label>
-        <select id="fileType">
+        <select id="fileType" onchange="resetStatus()">
             <option value="bukpot">Bukti Potong Pajak (BPU/BPUP)</option>
             <option value="mileapp">Data Resi Mile App (POD Pusat)</option>
         </select>
@@ -121,9 +122,9 @@
 
     <div class="upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
         <span class="upload-label-btn">Pilih File</span>
-        <p>Atau Drag & Drop (Tarik dan Lepas) file CSV Anda di sini</p>
+        <p>Atau Drag & Drop (Tarik dan Lepas) file CSV Anda di area ini</p>
         <input type="file" id="fileInput" accept=".csv" multiple>
-        <div class="note">*Anda bisa memilih/menarik lebih dari 1 file sekaligus untuk menggabungkannya otomatis.</div>
+        <div class="note">*Tips: Pilih lebih dari 1 file sekaligus untuk menggabungkannya otomatis.</div>
         <span id="fileCount">Belum ada file terpilih</span>
     </div>
 
@@ -144,7 +145,6 @@
     const fileInput = document.getElementById('fileInput');
     const fileCountText = document.getElementById('fileCount');
 
-    // Mencegah perilaku default browser saat drag n drop
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         dropZone.addEventListener(eventName, preventDefaults, false);
         document.body.addEventListener(eventName, preventDefaults, false);
@@ -155,7 +155,6 @@
         e.stopPropagation();
     }
 
-    // Efek visual saat file di-drag ke atas area
     ['dragenter', 'dragover'].forEach(eventName => {
         dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
     });
@@ -164,17 +163,17 @@
         dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
     });
 
-    // Menangani saat file dilepaskan (drop)
     dropZone.addEventListener('drop', handleDrop, false);
 
     function handleDrop(e) {
+        dropZone.classList.remove('dragover');
         const dt = e.dataTransfer;
-        const files = dt.files;
-        fileInput.files = files; // Memasukkan file ke input
-        updateFileCount();
+        if (dt.files && dt.files.length > 0) {
+            fileInput.files = dt.files;
+            updateFileCount();
+        }
     }
 
-    // Menangani saat file dipilih lewat tombol
     fileInput.addEventListener('change', updateFileCount);
 
     function updateFileCount() {
@@ -186,8 +185,24 @@
             fileCountText.innerHTML = "Belum ada file terpilih";
             fileCountText.style.color = "#EF4123";
         }
+        resetStatus();
+    }
+
+    function resetStatus() {
         document.getElementById('downloadBtn').style.display = "none";
         document.getElementById('status').innerHTML = "";
+        finalData = [];
+    }
+
+    // --- PENYERAGAMAN FORMAT TEKS ---
+    function formatTeksRapi(text) {
+        if (!text) return "";
+        let upperText = text.toUpperCase().trim();
+        // Standarisasi penyebutan instansi
+        if (upperText.includes("BANK INDONESIA") || upperText.includes("KPW BI KEPRI")) {
+            return "KANTOR PERWAKILAN BANK INDONESIA KEPULAUAN RIAU";
+        }
+        return upperText;
     }
 
     // --- LOGIKA PEMROSESAN FILE ---
@@ -203,30 +218,36 @@
         }
 
         processBtn.disabled = true;
-        statusDiv.innerHTML = "Memproses " + fileInput.files.length + " file...";
+        statusDiv.innerHTML = "Memproses " + fileInput.files.length + " file... Mohon tunggu.";
         finalData = [];
 
-        for (let i = 0; i < fileInput.files.length; i++) {
-            const file = fileInput.files[i];
-            const text = await readFileAsText(file);
-            
-            if (fileTypeGlobal === 'bukpot') {
-                finalData = finalData.concat(processBukpot(text));
-            } else if (fileTypeGlobal === 'mileapp') {
-                finalData = finalData.concat(processMileApp(text));
+        try {
+            for (let i = 0; i < fileInput.files.length; i++) {
+                const file = fileInput.files[i];
+                const text = await readFileAsText(file);
+                
+                if (fileTypeGlobal === 'bukpot') {
+                    finalData = finalData.concat(processBukpot(text));
+                } else if (fileTypeGlobal === 'mileapp') {
+                    finalData = finalData.concat(processMileApp(text));
+                }
             }
-        }
 
-        // Pengurutan berdasarkan tanggal
-        if (fileTypeGlobal === 'bukpot') {
-            finalData.sort((a, b) => new Date(a['Tanggal Bukti Potong']) - new Date(b['Tanggal Bukti Potong']));
-        } else if (fileTypeGlobal === 'mileapp') {
-            finalData.sort((a, b) => (a['Tgl Kirim'] > b['Tgl Kirim']) ? 1 : -1);
-        }
+            // Pengurutan Tanggal
+            if (fileTypeGlobal === 'bukpot') {
+                finalData.sort((a, b) => new Date(a['Tanggal Bukti Potong']) - new Date(b['Tanggal Bukti Potong']));
+            } else if (fileTypeGlobal === 'mileapp') {
+                finalData.sort((a, b) => parseMileDate(a['Tgl Kirim']) - parseMileDate(b['Tgl Kirim']));
+            }
 
-        statusDiv.innerHTML = "Selesai! " + finalData.length + " baris data berhasil dirapikan dan siap didownload.";
-        processBtn.disabled = false;
-        downloadBtn.style.display = "inline-block";
+            statusDiv.innerHTML = "Selesai! " + finalData.length + " baris data berhasil dirapikan dan siap didownload.";
+            downloadBtn.style.display = "inline-block";
+        } catch (error) {
+            statusDiv.innerHTML = "Gagal memproses file. Pastikan format CSV sesuai.";
+            console.error(error);
+        } finally {
+            processBtn.disabled = false;
+        }
     }
 
     function readFileAsText(file) {
@@ -238,6 +259,17 @@
         });
     }
 
+    function parseMileDate(dateStr) {
+        if (!dateStr) return 0;
+        let parts = dateStr.split(' ');
+        let dmy = parts[0].split('-');
+        if (dmy.length === 3) {
+            // Konversi DD-MM-YYYY ke timestamp agar sort akurat
+            return new Date(`${dmy[2]}-${dmy[1]}-${dmy[0]}T${parts[1] || '00:00:00'}`).getTime();
+        }
+        return 0;
+    }
+
     // --- LOGIKA BUKTI POTONG ---
     function processBukpot(rawText) {
         let lines = rawText.split('\n');
@@ -246,6 +278,7 @@
         for (let line of lines) {
             line = line.trim();
             if (!line) continue;
+            // Hanya berlaku untuk bukpot yang delimiter-nya koma
             if (line.includes(';;')) line = line.split(';;')[0];
             line = line.replace(/;+$/, ''); 
             cleanedCsvText += line + "\n";
@@ -266,11 +299,11 @@
                 "Masa Pajak": (row.masa_pajak || "").replace(/\.0$/, ""),
                 "Status": row.status_bupot || "",
                 "NPWP/TIN Lawan Transaksi": npwp.replace(/\.0$/, ""),
-                "Nama Lawan Transaksi": nama,
+                "Nama Lawan Transaksi": formatTeksRapi(nama),
                 "Kode Objek Pajak": row.kop || "",
                 "DPP Bruto": parseFloat(row.dpp_bruto) || 0,
                 "PPh Dipotong": parseFloat(row.pph) || 0,
-                "Dokumen Dasar": row.doc_dp || "",
+                "Dokumen Dasar": formatTeksRapi(row.doc_dp),
                 "Nomor Dokumen": row.no_doc_dp || ""
             };
             
@@ -303,20 +336,20 @@
             let cleanRow = {
                 "No Resi": String(row["No Resi"] || ""),
                 "Layanan": row["Layanan"] || "",
-                "Nama Pengirim": row["Nama Pengirim"] || "",
-                "Penerima": row["Penerima"] || "",
+                "Nama Pengirim": formatTeksRapi(row["Nama Pengirim"]),
+                "Penerima": formatTeksRapi(row["Penerima"]),
                 "No HP": String(row["No HP"] || "").replace(/\.0$/, ""),
-                "Kota Tujuan": row["Kota"] || "",
+                "Kota Tujuan": formatTeksRapi(row["Kota"]),
                 "Berat": parseFloat(beratClean) || 0,
                 "Ongkir": parseFloat(ongkirClean) || 0,
                 "PPN": parseFloat(ppnClean) || 0,
                 "HTNB": parseFloat(htnbClean) || 0,
                 "Total Bea": parseFloat(totalBeaClean) || 0,
                 "Tgl Kirim": row["Tgl Kirim"] || "",
-                "Status": row["Status"] || "",
-                "Kiriman Diterima Oleh": row["Kiriman Diterima Oleh"] || "",
+                "Status": formatTeksRapi(row["Status"]),
+                "Kiriman Diterima Oleh": formatTeksRapi(row["Kiriman Diterima Oleh"]),
                 "Tgl Update": row["Tgl Update"] || "",
-                "Petugas": row["Petugas  Eintri"] || ""
+                "Petugas": formatTeksRapi(row["Petugas  Eintri"])
             };
             
             if(cleanRow["No Resi"] !== "" && cleanRow["No Resi"] !== "No Resi") {
@@ -338,56 +371,69 @@
             headers.forEach((key, i) => {
                 let val = row[key];
                 let len = val ? val.toString().length : 0;
-                if (typeof val === 'number') len += 4; 
+                if (typeof val === 'number') len += 4; // Padding ekstra untuk titik ribuan
                 if (len > colWidths[i]) colWidths[i] = len;
             });
         });
         
-        return colWidths.map(w => ({ wch: Math.min(Math.max(w + 2, 10), 60) }));
+        return colWidths.map(w => ({ wch: Math.min(Math.max(w + 2, 10), 60) })); // Max lebar 60
     }
 
-    // --- EXPORT KE EXCEL ---
+    // --- EXPORT KE EXCEL & STYLING ---
     function downloadExcel() {
-        if (finalData.length === 0) return;
+        if (finalData.length === 0) {
+            alert("Tidak ada data untuk diunduh.");
+            return;
+        }
 
-        const ws = XLSX.utils.json_to_sheet(finalData);
-        ws['!cols'] = fitToColumn(finalData);
+        try {
+            const ws = XLSX.utils.json_to_sheet(finalData);
+            ws['!cols'] = fitToColumn(finalData);
 
-        const range = XLSX.utils.decode_range(ws['!ref']);
-        for (let R = range.s.r; R <= range.e.r; ++R) {
-            for (let C = range.s.c; C <= range.e.c; ++C) {
-                const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-                if (!ws[cellRef]) continue;
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            for (let R = range.s.r; R <= range.e.r; ++R) {
+                for (let C = range.s.c; C <= range.e.c; ++C) {
+                    const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+                    if (!ws[cellRef]) continue;
 
-                ws[cellRef].s = {};
+                    // Inisialisasi object style
+                    ws[cellRef].s = {};
 
-                // Header PosIND
-                if (R === 0) {
-                    ws[cellRef].s = {
-                        fill: { fgColor: { rgb: "1C2D5A" } },
-                        font: { bold: true, color: { rgb: "FFFFFF" }, name: "Arial", sz: 12 },
-                        alignment: { horizontal: "center", vertical: "center", wrapText: true }
-                    };
-                } else {
-                    ws[cellRef].s = { font: { name: "Arial", sz: 11 } };
-                    
-                    // Format Angka & Ribuan Universal
-                    if (ws[cellRef].t === 'n') {
-                        ws[cellRef].s.numFmt = "#,##0";
-                        ws[cellRef].s.alignment = { horizontal: "right" };
-                    } else {
-                        ws[cellRef].s.alignment = { vertical: "center" };
+                    // Style Header PosIND
+                    if (R === 0) {
+                        ws[cellRef].s = {
+                            fill: { fgColor: { rgb: "1C2D5A" } },
+                            font: { bold: true, color: { rgb: "FFFFFF" }, name: "Arial", sz: 12 },
+                            alignment: { horizontal: "center", vertical: "center", wrapText: true }
+                        };
+                    } 
+                    // Style Data
+                    else {
+                        ws[cellRef].s = { 
+                            font: { name: "Arial", sz: 11 },
+                            alignment: { vertical: "center" }
+                        };
+                        
+                        // Perbaikan Bug: Format Angka menggunakan .z (Standar SheetJS)
+                        if (ws[cellRef].t === 'n') {
+                            ws[cellRef].z = "#,##0"; 
+                            ws[cellRef].s.alignment.horizontal = "right";
+                        }
                     }
                 }
             }
+
+            const wb = XLSX.utils.book_new();
+            let sheetName = fileTypeGlobal === 'bukpot' ? "Bukti_Potong" : "Resi_MileApp";
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+            let fileName = fileTypeGlobal === 'bukpot' ? "Rekap_Bukti_Potong_PosIND.xlsx" : "Rekap_MileApp_PosIND.xlsx";
+            XLSX.writeFile(wb, fileName);
+            
+        } catch (error) {
+            alert("Terjadi kesalahan saat membuat file Excel. Pastikan library termuat dengan baik.\n\nPesan Error: " + error.message);
+            console.error(error);
         }
-
-        const wb = XLSX.utils.book_new();
-        let sheetName = fileTypeGlobal === 'bukpot' ? "Bukti_Potong" : "Resi_MileApp";
-        XLSX.utils.book_append_sheet(wb, ws, sheetName);
-
-        let fileName = fileTypeGlobal === 'bukpot' ? "Rekap_Bukti_Potong_PosIND.xlsx" : "Rekap_MileApp_PosIND.xlsx";
-        XLSX.writeFile(wb, fileName);
     }
 </script>
 
