@@ -26,7 +26,7 @@
 
 <div class="container">
     <h2>Alat Perapih File CSV (Offline)</h2>
-    <p>Upload file CSV yang rusak atau mentah, lalu download hasilnya dalam format Excel yang sudah bersih.</p>
+    <p>Upload file CSV (Bukti Potong / Mile App), lalu download hasil Excel dengan format angka dan separator ribuan yang sempurna.</p>
 
     <div class="form-group">
         <label for="fileType">Pilih Jenis Data:</label>
@@ -80,7 +80,7 @@
             }
         }
 
-        // Pengurutan
+        // Urutkan data berdasarkan tanggal
         if (fileTypeGlobal === 'bukpot') {
             finalData.sort((a, b) => new Date(a['Tanggal Bukti Potong']) - new Date(b['Tanggal Bukti Potong']));
         } else if (fileTypeGlobal === 'mileapp') {
@@ -101,7 +101,7 @@
         });
     }
 
-    // Fungsi untuk memproses Bukti Potong
+    // Pemrosesan Bukti Potong
     function processBukpot(rawText) {
         let lines = rawText.split('\n');
         let cleanedCsvText = "";
@@ -146,9 +146,8 @@
         return formatted;
     }
 
-    // Fungsi untuk memproses Data Mile App
+    // Pemrosesan Data Mile App
     function processMileApp(rawText) {
-        // Parse CSV khusus Mile App (menggunakan pemisah ;)
         let parsed = Papa.parse(rawText, {
             header: true,
             skipEmptyLines: true,
@@ -158,20 +157,20 @@
         let formatted = [];
         
         parsed.data.forEach(row => {
-            // Bersihkan koma dari nilai uang agar bisa jadi angka Excel
+            // Hilangkan karakter koma bawaan sistem agar jadi pure angka
             let ongkirClean = (row["Ongkir"] || "0").replace(/,/g, '');
             let totalBeaClean = (row["Total Bea"] || "0").replace(/,/g, '');
             let ppnClean = (row["PPN"] || "0").replace(/,/g, '');
+            let beratClean = (row["Berat"] || "0").replace(/,/g, '');
             
-            // Format data
             let cleanRow = {
-                "No Resi": row["No Resi"] || "",
+                "No Resi": String(row["No Resi"] || ""),
                 "Layanan": row["Layanan"] || "",
                 "Nama Pengirim": row["Nama Pengirim"] || "",
                 "Penerima": row["Penerima"] || "",
-                "No HP": row["No HP"] || "",
+                "No HP": String(row["No HP"] || ""),
                 "Kota Tujuan": row["Kota"] || "",
-                "Berat": parseFloat(row["Berat"]) || 0,
+                "Berat": parseFloat(beratClean) || 0,
                 "Ongkir": parseFloat(ongkirClean) || 0,
                 "PPN": parseFloat(ppnClean) || 0,
                 "Total Bea": parseFloat(totalBeaClean) || 0,
@@ -182,7 +181,6 @@
                 "Petugas": row["Petugas  Eintri"] || ""
             };
             
-            // Masukkan data valid (cek header)
             if(cleanRow["No Resi"] !== "" && cleanRow["No Resi"] !== "No Resi") {
                 formatted.push(cleanRow);
             }
@@ -194,9 +192,25 @@
     function downloadExcel() {
         if (finalData.length === 0) return;
 
+        // Mengubah JSON array menjadi format worksheet Excel
         const ws = XLSX.utils.json_to_sheet(finalData);
-        const wb = XLSX.utils.book_new();
         
+        /* =======================================================
+           KODE BARU: MENERAPKAN FORMAT RIBUAN PADA SEMUA ANGKA
+           =======================================================
+        */
+        for (let cellAddress in ws) {
+            if (cellAddress[0] === '!') continue; // Lewati metadata sistem
+            
+            let cell = ws[cellAddress];
+            // Jika tipe cell adalah angka (n), berikan format number "universal"
+            if (cell.t === 'n') {
+                cell.z = '#,##0'; // Excel akan otomatis menyesuaikan koma/titik sesuai pengaturan laptop user
+            }
+        }
+        // =======================================================
+
+        const wb = XLSX.utils.book_new();
         let sheetName = fileTypeGlobal === 'bukpot' ? "Bukti_Potong" : "Data_Resi_MileApp";
         XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
