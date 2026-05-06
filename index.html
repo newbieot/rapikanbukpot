@@ -23,6 +23,19 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
             border-top: 6px solid #1C2D5A; /* Delft Blue */
         }
+        
+        /* Pengaturan Logo */
+        .logo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .logo-danantara { height: 45px; }
+        .logo-posind { height: 40px; }
+
         h2 { color: #1C2D5A; margin-top: 0; }
         .accent { color: #EF4123; /* Cinnabar */ }
         .form-group { margin-bottom: 20px; }
@@ -36,17 +49,36 @@
             outline: none;
         }
         select:focus { border-color: #1C2D5A; }
+        
+        /* Pengaturan Area Upload & Drag-Drop */
         .upload-area { 
             border: 2px dashed #ccc; 
-            padding: 30px 20px; 
+            padding: 40px 20px; 
             text-align: center; 
             border-radius: 8px; 
             margin-bottom: 20px; 
             background-color: #fafafa; 
-            transition: all 0.3s;
+            transition: all 0.3s ease;
+            cursor: pointer;
         }
         .upload-area:hover { border-color: #1C2D5A; background-color: #f0f4fb; }
-        input[type="file"] { margin-top: 10px; font-size: 15px; }
+        .upload-area.dragover {
+            background-color: #e8f0fe;
+            border-color: #EF4123;
+            transform: scale(1.02);
+        }
+        input[type="file"] { display: none; } /* Sembunyikan input default */
+        .upload-label-btn {
+            background-color: #fff;
+            border: 1px solid #1C2D5A;
+            color: #1C2D5A;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        
         button { 
             background-color: #EF4123; /* Cinnabar */
             color: white; 
@@ -65,11 +97,17 @@
         #downloadBtn:hover { background-color: #131e3d; }
         #status { margin-top: 15px; font-weight: bold; color: #2c3e50; }
         .note { font-size: 13px; color: #7f8c8d; margin-top: 10px; }
+        #fileCount { font-weight: bold; color: #EF4123; margin-top: 15px; display: block; }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <div class="logo-header">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Danantara_Indonesia.svg/1280px-Danantara_Indonesia.svg.png" alt="Logo Danantara" class="logo-danantara">
+        <img src="https://admin-piol.posindonesia.co.id/media/PosIND_Main%20Color.png" alt="Logo PosIND" class="logo-posind">
+    </div>
+
     <h2>Alat Perapih Data <span class="accent">PosIND</span></h2>
     <p>Upload file CSV dari sistem, lalu download hasil Excel yang sudah <strong>terformat rapi (auto-width, warna header Delft Blue, & separator angka universal)</strong>.</p>
 
@@ -81,10 +119,12 @@
         </select>
     </div>
 
-    <div class="upload-area">
-        <label for="fileInput" style="cursor: pointer; font-size: 16px;">Pilih File CSV Anda di sini:</label>
+    <div class="upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <span class="upload-label-btn">Pilih File</span>
+        <p>Atau Drag & Drop (Tarik dan Lepas) file CSV Anda di sini</p>
         <input type="file" id="fileInput" accept=".csv" multiple>
-        <div class="note">*Tips: Pilih lebih dari 1 file sekaligus (Ctrl/Shift+Klik) untuk menggabungkannya otomatis.</div>
+        <div class="note">*Anda bisa memilih/menarik lebih dari 1 file sekaligus untuk menggabungkannya otomatis.</div>
+        <span id="fileCount">Belum ada file terpilih</span>
     </div>
 
     <div>
@@ -99,15 +139,66 @@
     let finalData = [];
     let fileTypeGlobal = 'bukpot';
 
+    // --- LOGIKA DRAG AND DROP ---
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileCountText = document.getElementById('fileCount');
+
+    // Mencegah perilaku default browser saat drag n drop
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    // Efek visual saat file di-drag ke atas area
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+    });
+
+    // Menangani saat file dilepaskan (drop)
+    dropZone.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        fileInput.files = files; // Memasukkan file ke input
+        updateFileCount();
+    }
+
+    // Menangani saat file dipilih lewat tombol
+    fileInput.addEventListener('change', updateFileCount);
+
+    function updateFileCount() {
+        const count = fileInput.files.length;
+        if (count > 0) {
+            fileCountText.innerHTML = `✔️ ${count} file siap diproses.`;
+            fileCountText.style.color = "#27ae60";
+        } else {
+            fileCountText.innerHTML = "Belum ada file terpilih";
+            fileCountText.style.color = "#EF4123";
+        }
+        document.getElementById('downloadBtn').style.display = "none";
+        document.getElementById('status').innerHTML = "";
+    }
+
+    // --- LOGIKA PEMROSESAN FILE ---
     async function processFiles() {
-        const fileInput = document.getElementById('fileInput');
         const statusDiv = document.getElementById('status');
         const processBtn = document.getElementById('processBtn');
         const downloadBtn = document.getElementById('downloadBtn');
         fileTypeGlobal = document.getElementById('fileType').value;
 
         if (fileInput.files.length === 0) {
-            alert("Silakan pilih file CSV terlebih dahulu.");
+            alert("Silakan pilih atau tarik file CSV ke area upload terlebih dahulu.");
             return;
         }
 
@@ -126,11 +217,10 @@
             }
         }
 
-        // Pengurutan berdasarkan tanggal yang sesuai
+        // Pengurutan berdasarkan tanggal
         if (fileTypeGlobal === 'bukpot') {
             finalData.sort((a, b) => new Date(a['Tanggal Bukti Potong']) - new Date(b['Tanggal Bukti Potong']));
         } else if (fileTypeGlobal === 'mileapp') {
-            // Urut berdasarkan string Tgl Kirim agar berurutan dengan baik
             finalData.sort((a, b) => (a['Tgl Kirim'] > b['Tgl Kirim']) ? 1 : -1);
         }
 
@@ -148,7 +238,7 @@
         });
     }
 
-    // --- LOGIKA PEMROSESAN BUKTI POTONG ---
+    // --- LOGIKA BUKTI POTONG ---
     function processBukpot(rawText) {
         let lines = rawText.split('\n');
         let cleanedCsvText = "";
@@ -156,7 +246,6 @@
         for (let line of lines) {
             line = line.trim();
             if (!line) continue;
-            // Bersihkan error delimiter berlebih
             if (line.includes(';;')) line = line.split(';;')[0];
             line = line.replace(/;+$/, ''); 
             cleanedCsvText += line + "\n";
@@ -194,9 +283,8 @@
         return formatted;
     }
 
-    // --- LOGIKA PEMROSESAN MILE APP ---
+    // --- LOGIKA MILE APP ---
     function processMileApp(rawText) {
-        // Mile app dipisahkan dengan titik koma (;)
         let parsed = Papa.parse(rawText, {
             header: true,
             skipEmptyLines: true,
@@ -206,7 +294,6 @@
         let formatted = [];
         
         parsed.data.forEach(row => {
-            // Hapus koma bawaan string dan jadikan angka numerik sejati (parseFloat)
             let ongkirClean = (row["Ongkir"] || "0").replace(/,/g, '');
             let totalBeaClean = (row["Total Bea"] || "0").replace(/,/g, '');
             let ppnClean = (row["PPN"] || "0").replace(/,/g, '');
@@ -239,83 +326,62 @@
         return formatted;
     }
 
-    // --- FUNGSI AUTO-WIDTH KOLOM ---
+    // --- FUNGSI AUTO-WIDTH ---
     function fitToColumn(data) {
         if (!data || data.length === 0) return [];
         let colWidths = [];
         let headers = Object.keys(data[0]);
         
-        // Inisialisasi lebar dengan panjang judul header
-        headers.forEach((key, i) => {
-            colWidths[i] = key.length;
-        });
+        headers.forEach((key, i) => { colWidths[i] = key.length; });
         
-        // Cek data untuk mencari isi terpanjang di masing-masing kolom
         data.forEach(row => {
             headers.forEach((key, i) => {
                 let val = row[key];
                 let len = val ? val.toString().length : 0;
-                // Tambahkan sedikit padding panjang jika itu angka (untuk mengantisipasi titik ribuan)
-                if (typeof val === 'number') len += 3; 
-                if (len > colWidths[i]) {
-                    colWidths[i] = len;
-                }
+                if (typeof val === 'number') len += 4; 
+                if (len > colWidths[i]) colWidths[i] = len;
             });
         });
         
-        // Konversi ke format {wch: width} milik Excel (batas max width 60 agar tidak terlalu lebar)
         return colWidths.map(w => ({ wch: Math.min(Math.max(w + 2, 10), 60) }));
     }
 
-    // --- LOGIKA PEMBUATAN EXCEL & STYLING ---
+    // --- EXPORT KE EXCEL ---
     function downloadExcel() {
         if (finalData.length === 0) return;
 
-        // Membuat Worksheet baru
         const ws = XLSX.utils.json_to_sheet(finalData);
-
-        // 1. Terapkan Width/Lebar Kolom (Rapi)
         ws['!cols'] = fitToColumn(finalData);
 
-        // 2. Menerapkan Gaya (Warna Header PosIND & Format Angka)
         const range = XLSX.utils.decode_range(ws['!ref']);
         for (let R = range.s.r; R <= range.e.r; ++R) {
             for (let C = range.s.c; C <= range.e.c; ++C) {
                 const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
                 if (!ws[cellRef]) continue;
 
-                // Definisi styling untuk cell
                 ws[cellRef].s = {};
 
-                // Bagian Baris 0 = Header Tabel
+                // Header PosIND
                 if (R === 0) {
                     ws[cellRef].s = {
-                        fill: { fgColor: { rgb: "1C2D5A" } }, // Warna Delft Blue PosIND
-                        font: { bold: true, color: { rgb: "FFFFFF" }, name: "Arial", sz: 12 }, // Putih Tebal
+                        fill: { fgColor: { rgb: "1C2D5A" } },
+                        font: { bold: true, color: { rgb: "FFFFFF" }, name: "Arial", sz: 12 },
                         alignment: { horizontal: "center", vertical: "center", wrapText: true }
                     };
-                } 
-                // Bagian Data (Baris >= 1)
-                else {
-                    // Font standar baris data
+                } else {
                     ws[cellRef].s = { font: { name: "Arial", sz: 11 } };
                     
-                    // Jika cell terdeteksi sebagai angka (number)
+                    // Format Angka & Ribuan Universal
                     if (ws[cellRef].t === 'n') {
-                        // Menerapkan "Thousand Separator" Excel asli.
-                        // Format ini otomatis dibaca sebagai titik atau koma sesuai setting local/region Windows user
                         ws[cellRef].s.numFmt = "#,##0";
                         ws[cellRef].s.alignment = { horizontal: "right" };
-                    } 
-                    // Perataan untuk tanggal dan teks pendek tertentu (opsional agar lebih rapi)
-                    else {
+                    } else {
                         ws[cellRef].s.alignment = { vertical: "center" };
                     }
                 }
             }
         }
 
-        // Simpan Workbook
         const wb = XLSX.utils.book_new();
         let sheetName = fileTypeGlobal === 'bukpot' ? "Bukti_Potong" : "Resi_MileApp";
         XLSX.utils.book_append_sheet(wb, ws, sheetName);
