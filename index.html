@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alat Perapih CSV - PosIND</title>
+    <title>Alat Perapih CSV - PosIND & Danantara</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <style>
@@ -20,85 +20,121 @@
             background: #fff; 
             padding: 30px; 
             border-radius: 8px; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
             border-top: 6px solid #1C2D5A; /* Delft Blue PosIND */
         }
         
-        /* Area Logo */
+        /* Layout Logo */
         .logo-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f1f3f5;
         }
-        .logo-danantara { height: 45px; }
-        .logo-posind { height: 40px; }
+        .logo-danantara { height: 50px; width: auto; object-fit: contain; }
+        .logo-posind { height: 42px; width: auto; object-fit: contain; }
 
-        h2 { color: #1C2D5A; margin-top: 0; }
+        h2 { color: #1C2D5A; margin-top: 0; text-align: center; }
         .accent { color: #EF4123; /* Cinnabar PosIND */ }
-        .form-group { margin-bottom: 20px; }
-        label { font-weight: bold; display: block; margin-bottom: 8px; color: #1C2D5A; }
-        select { 
-            width: 100%; 
-            padding: 10px; 
-            border: 2px solid #ccc; 
-            border-radius: 4px; 
-            font-size: 15px; 
-            outline: none;
-            cursor: pointer;
+        p.subtitle { text-align: center; color: #666; margin-bottom: 25px; }
+
+        /* TAB UI & UX STYLE (Calculator Style) */
+        .tab-container {
+            display: flex;
+            background-color: #f1f3f5;
+            padding: 6px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border: 1px solid #e2e8f0;
         }
-        select:focus { border-color: #1C2D5A; }
+        .tab-btn {
+            flex: 1;
+            text-align: center;
+            padding: 14px 10px;
+            font-size: 15px;
+            font-weight: bold;
+            color: #555;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.25s ease-in-out;
+            user-select: none;
+            border: none;
+            background: none;
+        }
+        .tab-btn:hover {
+            color: #1C2D5A;
+        }
+        .tab-btn.active {
+            background-color: #1C2D5A; /* Delft Blue */
+            color: #ffffff;
+            box-shadow: 0 4px 6px rgba(28, 45, 90, 0.2);
+        }
         
         /* Area Upload Drag & Drop */
         .upload-area { 
-            border: 2px dashed #ccc; 
-            padding: 40px 20px; 
+            border: 2px dashed #cbd5e1; 
+            padding: 45px 20px; 
             text-align: center; 
             border-radius: 8px; 
-            margin-bottom: 20px; 
+            margin-bottom: 25px; 
             background-color: #fafafa; 
             transition: all 0.3s ease;
             cursor: pointer;
         }
-        .upload-area:hover { border-color: #1C2D5A; background-color: #f0f4fb; }
+        .upload-area:hover { border-color: #1C2D5A; background-color: #f8fafc; }
         .upload-area.dragover {
-            background-color: #e8f0fe;
+            background-color: #e0e7ff;
             border-color: #EF4123;
-            transform: scale(1.02);
+            transform: scale(1.015);
         }
         input[type="file"] { display: none; }
+        
         .upload-label-btn {
             background-color: #fff;
-            border: 1px solid #1C2D5A;
+            border: 2px solid #1C2D5A;
             color: #1C2D5A;
-            padding: 8px 16px;
+            padding: 10px 20px;
             border-radius: 4px;
             font-weight: bold;
             display: inline-block;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+        .upload-area:hover .upload-label-btn {
+            background-color: #1C2D5A;
+            color: #fff;
         }
         
-        button { 
-            background-color: #EF4123; 
+        /* Tombol Aksi */
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        button.action-btn { 
+            background-color: #EF4123; /* Cinnabar */
             color: white; 
             border: none; 
-            padding: 12px 24px; 
+            padding: 14px 28px; 
             font-size: 16px; 
             font-weight: bold;
-            border-radius: 4px; 
+            border-radius: 6px; 
             cursor: pointer; 
-            margin-right: 10px; 
-            transition: background 0.3s; 
+            transition: background 0.3s, transform 0.1s; 
+            box-shadow: 0 4px 6px rgba(239, 65, 35, 0.2);
         }
-        button:hover { background-color: #d1371c; }
-        button:disabled { background-color: #ccc; cursor: not-allowed; }
-        #downloadBtn { background-color: #1C2D5A; }
-        #downloadBtn:hover { background-color: #131e3d; }
-        #status { margin-top: 15px; font-weight: bold; color: #2c3e50; }
+        button.action-btn:hover { background-color: #d1371c; }
+        button.action-btn:active { transform: scale(0.98); }
+        button.action-btn:disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; }
+        
+        #downloadBtn { background-color: #27ae60; box-shadow: 0 4px 6px rgba(39, 174, 96, 0.2); }
+        #downloadBtn:hover { background-color: #219653; }
+        
+        #status { margin-top: 20px; font-weight: bold; color: #2c3e50; text-align: center; font-size: 15px; }
         .note { font-size: 13px; color: #7f8c8d; margin-top: 10px; }
-        #fileCount { font-weight: bold; color: #EF4123; margin-top: 15px; display: block; }
+        #fileCount { font-weight: bold; color: #EF4123; margin-top: 15px; display: block; font-size: 15px; }
     </style>
 </head>
 <body>
@@ -110,27 +146,24 @@
     </div>
 
     <h2>Alat Perapih Data <span class="accent">PosIND</span></h2>
-    <p>Upload file CSV dari sistem, lalu download hasil Excel yang terformat rapi (auto-width, header Delft Blue, & separator ribuan).</p>
+    <p class="subtitle">Gabungkan dan rapikan file CSV Anda secara lokal dan aman tanpa koneksi internet.</p>
 
-    <div class="form-group">
-        <label for="fileType">Pilih Jenis Data yang Akan Dirapikan:</label>
-        <select id="fileType" onchange="resetStatus()">
-            <option value="bukpot">Bukti Potong Pajak (BPU/BPUP)</option>
-            <option value="mileapp">Data Resi Mile App (POD Pusat)</option>
-        </select>
+    <div class="tab-container">
+        <button class="tab-btn active" id="tab-bukpot" onclick="switchTab('bukpot')">Bukti Potong Pajak (BPU/BPUP)</button>
+        <button class="tab-btn" id="tab-mileapp" onclick="switchTab('mileapp')">Data Resi Mile App (POD Pusat)</button>
     </div>
 
     <div class="upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
-        <span class="upload-label-btn">Pilih File</span>
-        <p>Atau Drag & Drop (Tarik dan Lepas) file CSV Anda di area ini</p>
+        <span class="upload-label-btn">Pilih File CSV</span>
+        <p style="font-weight: 500; margin: 5px 0;">atau Seret & Letakkan (Drag & Drop) file Anda di sini</p>
         <input type="file" id="fileInput" accept=".csv" multiple>
-        <div class="note">*Tips: Pilih lebih dari 1 file sekaligus untuk menggabungkannya otomatis.</div>
+        <div class="note">*Mendukung penggabungan beberapa file sekaligus secara otomatis.</div>
         <span id="fileCount">Belum ada file terpilih</span>
     </div>
 
-    <div>
-        <button id="processBtn" onclick="processFiles()">Proses Data</button>
-        <button id="downloadBtn" onclick="downloadExcel()" style="display:none;">Download Excel Rapi</button>
+    <div class="btn-group">
+        <button id="processBtn" class="action-btn" onclick="processFiles()">Proses Data</button>
+        <button id="downloadBtn" class="action-btn" onclick="downloadExcel()" style="display:none;">Download Excel Rapi</button>
     </div>
 
     <div id="status"></div>
@@ -140,7 +173,7 @@
     let finalData = [];
     let fileTypeGlobal = 'bukpot';
 
-    // --- LOGIKA DRAG AND DROP ---
+    // --- INTERAKSI DRAG AND DROP ---
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
     const fileCountText = document.getElementById('fileCount');
@@ -188,37 +221,53 @@
         resetStatus();
     }
 
+    // --- LOGIKA PERPINDAHAN TAB ---
+    function switchTab(type) {
+        fileTypeGlobal = type;
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        
+        if (type === 'bukpot') {
+            document.getElementById('tab-bukpot').classList.add('active');
+        } else {
+            document.getElementById('tab-mileapp').classList.add('active');
+        }
+        
+        // Reset file input dan status setiap ganti tab agar tidak bercampur
+        fileInput.value = "";
+        updateFileCount();
+        resetStatus();
+    }
+
     function resetStatus() {
         document.getElementById('downloadBtn').style.display = "none";
         document.getElementById('status').innerHTML = "";
         finalData = [];
     }
 
-    // --- PENYERAGAMAN FORMAT TEKS ---
+    // --- STANDARISASI TEKS & NAMA (KAPITAL) ---
     function formatTeksRapi(text) {
         if (!text) return "";
         let upperText = text.toUpperCase().trim();
-        // Standarisasi penyebutan instansi
-        if (upperText.includes("BANK INDONESIA") || upperText.includes("KPW BI KEPRI")) {
+        // Sesuai preferensi koreksi Bank Indonesia
+        if (upperText.includes("BANK INDONESIA") || upperText.includes("KPW BI KEPRI") || upperText === "KPw BI KEPRI (GABUNGAN)") {
             return "KANTOR PERWAKILAN BANK INDONESIA KEPULAUAN RIAU";
         }
         return upperText;
     }
 
-    // --- LOGIKA PEMROSESAN FILE ---
+    // --- PROSES FILE CSV ---
     async function processFiles() {
         const statusDiv = document.getElementById('status');
         const processBtn = document.getElementById('processBtn');
         const downloadBtn = document.getElementById('downloadBtn');
-        fileTypeGlobal = document.getElementById('fileType').value;
 
         if (fileInput.files.length === 0) {
-            alert("Silakan pilih atau tarik file CSV ke area upload terlebih dahulu.");
+            alert("Silakan pilih atau seret file CSV Anda ke area upload.");
             return;
         }
 
         processBtn.disabled = true;
-        statusDiv.innerHTML = "Memproses " + fileInput.files.length + " file... Mohon tunggu.";
+        statusDiv.innerHTML = "Sedang merapikan data... Mohon tunggu sebentar.";
         finalData = [];
 
         try {
@@ -233,17 +282,17 @@
                 }
             }
 
-            // Pengurutan Tanggal
+            // Sorting Tanggal
             if (fileTypeGlobal === 'bukpot') {
                 finalData.sort((a, b) => new Date(a['Tanggal Bukti Potong']) - new Date(b['Tanggal Bukti Potong']));
             } else if (fileTypeGlobal === 'mileapp') {
                 finalData.sort((a, b) => parseMileDate(a['Tgl Kirim']) - parseMileDate(b['Tgl Kirim']));
             }
 
-            statusDiv.innerHTML = "Selesai! " + finalData.length + " baris data berhasil dirapikan dan siap didownload.";
+            statusDiv.innerHTML = `🎉 Sukses! ${finalData.length} baris data berhasil dirapikan.`;
             downloadBtn.style.display = "inline-block";
         } catch (error) {
-            statusDiv.innerHTML = "Gagal memproses file. Pastikan format CSV sesuai.";
+            statusDiv.innerHTML = "❌ Terjadi kesalahan saat membaca file CSV.";
             console.error(error);
         } finally {
             processBtn.disabled = false;
@@ -264,13 +313,12 @@
         let parts = dateStr.split(' ');
         let dmy = parts[0].split('-');
         if (dmy.length === 3) {
-            // Konversi DD-MM-YYYY ke timestamp agar sort akurat
             return new Date(`${dmy[2]}-${dmy[1]}-${dmy[0]}T${parts[1] || '00:00:00'}`).getTime();
         }
         return 0;
     }
 
-    // --- LOGIKA BUKTI POTONG ---
+    // --- FUNGSI BUKTI POTONG ---
     function processBukpot(rawText) {
         let lines = rawText.split('\n');
         let cleanedCsvText = "";
@@ -278,7 +326,6 @@
         for (let line of lines) {
             line = line.trim();
             if (!line) continue;
-            // Hanya berlaku untuk bukpot yang delimiter-nya koma
             if (line.includes(';;')) line = line.split(';;')[0];
             line = line.replace(/;+$/, ''); 
             cleanedCsvText += line + "\n";
@@ -316,7 +363,7 @@
         return formatted;
     }
 
-    // --- LOGIKA MILE APP ---
+    // --- FUNGSI MILE APP ---
     function processMileApp(rawText) {
         let parsed = Papa.parse(rawText, {
             header: true,
@@ -359,7 +406,7 @@
         return formatted;
     }
 
-    // --- FUNGSI AUTO-WIDTH ---
+    // --- FUNGSI AUTO-WIDTH ESTIMATOR ---
     function fitToColumn(data) {
         if (!data || data.length === 0) return [];
         let colWidths = [];
@@ -370,21 +417,28 @@
         data.forEach(row => {
             headers.forEach((key, i) => {
                 let val = row[key];
-                let len = val ? val.toString().length : 0;
-                if (typeof val === 'number') len += 4; // Padding ekstra untuk titik ribuan
+                let len = 0;
+                if (val !== undefined && val !== null) {
+                    if (typeof val === 'number') {
+                        // Perhitungan estimasi lebar angka termasuk desimal & koma separator
+                        let isDec = val % 1 !== 0;
+                        let valStr = val.toFixed(isDec ? 2 : 0);
+                        let commas = Math.floor((valStr.split('.')[0].length - 1) / 3);
+                        len = valStr.length + commas;
+                    } else {
+                        len = val.toString().length;
+                    }
+                }
                 if (len > colWidths[i]) colWidths[i] = len;
             });
         });
         
-        return colWidths.map(w => ({ wch: Math.min(Math.max(w + 2, 10), 60) })); // Max lebar 60
+        return colWidths.map(w => ({ wch: Math.min(Math.max(w + 3, 12), 60) }));
     }
 
     // --- EXPORT KE EXCEL & STYLING ---
     function downloadExcel() {
-        if (finalData.length === 0) {
-            alert("Tidak ada data untuk diunduh.");
-            return;
-        }
+        if (finalData.length === 0) return;
 
         try {
             const ws = XLSX.utils.json_to_sheet(finalData);
@@ -396,27 +450,42 @@
                     const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
                     if (!ws[cellRef]) continue;
 
-                    // Inisialisasi object style
                     ws[cellRef].s = {};
 
-                    // Style Header PosIND
+                    // Header Style (Delft Blue & Bold White)
                     if (R === 0) {
                         ws[cellRef].s = {
-                            fill: { fgColor: { rgb: "1C2D5A" } },
-                            font: { bold: true, color: { rgb: "FFFFFF" }, name: "Arial", sz: 12 },
-                            alignment: { horizontal: "center", vertical: "center", wrapText: true }
+                            fill: { patternType: "solid", fgColor: { rgb: "1C2D5A" } },
+                            font: { bold: true, color: { rgb: "FFFFFF" }, name: "Arial", sz: 11 },
+                            alignment: { horizontal: "center", vertical: "center", wrapText: true },
+                            border: {
+                                top: { style: "thin", color: { rgb: "CCCCCC" } },
+                                bottom: { style: "medium", color: { rgb: "1C2D5A" } },
+                                left: { style: "thin", color: { rgb: "CCCCCC" } },
+                                right: { style: "thin", color: { rgb: "CCCCCC" } }
+                            }
                         };
                     } 
-                    // Style Data
+                    // Data Rows Style
                     else {
                         ws[cellRef].s = { 
-                            font: { name: "Arial", sz: 11 },
-                            alignment: { vertical: "center" }
+                            font: { name: "Arial", sz: 10 },
+                            alignment: { vertical: "center", horizontal: "left" },
+                            border: {
+                                top: { style: "thin", color: { rgb: "E5E5E5" } },
+                                bottom: { style: "thin", color: { rgb: "E5E5E5" } },
+                                left: { style: "thin", color: { rgb: "E5E5E5" } },
+                                right: { style: "thin", color: { rgb: "E5E5E5" } }
+                            }
                         };
                         
-                        // Perbaikan Bug: Format Angka menggunakan .z (Standar SheetJS)
+                        // Deteksi tipe angka untuk memicu separator ribuan universal
                         if (ws[cellRef].t === 'n') {
-                            ws[cellRef].z = "#,##0"; 
+                            let isDecimal = ws[cellRef].v % 1 !== 0;
+                            let fPattern = isDecimal ? "#,##0.00" : "#,##0";
+                            
+                            ws[cellRef].z = fPattern; 
+                            ws[cellRef].s.numFmt = fPattern;
                             ws[cellRef].s.alignment.horizontal = "right";
                         }
                     }
@@ -431,7 +500,7 @@
             XLSX.writeFile(wb, fileName);
             
         } catch (error) {
-            alert("Terjadi kesalahan saat membuat file Excel. Pastikan library termuat dengan baik.\n\nPesan Error: " + error.message);
+            alert("Gagal mengekspor file Excel. Pesan Error: " + error.message);
             console.error(error);
         }
     }
