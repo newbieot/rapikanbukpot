@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alat Rekapitulasi Bukti Potong</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 40px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #E2572B; /* Warna aksen Pos */
+            margin-top: 0;
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            background-color: #fafafa;
+        }
+        input[type="file"] {
+            margin-top: 10px;
+        }
+        button {
+            background-color: #E2572B;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #c44b25;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        #status {
+            margin-top: 15px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .note {
+            font-size: 13px;
+            color: #7f8c8d;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Alat Perapih Bukti Potong Pajak (CSV ke Excel)</h2>
+    <p>Upload satu atau beberapa file CSV bukti potong (BPU/BPUP). Sistem akan otomatis membersihkan format yang rusak dan menggabungkannya menjadi file Excel yang rapi.</p>
+
+    <div class="upload-area">
+        <input type="file" id="fileInput" accept=".csv" multiple>
+        <div class="note">*Anda bisa memilih banyak file sekaligus dengan menahan tombol Ctrl/Shift.</div>
+    </div>
+
+    <div>
+        <button id="processBtn" onclick="processFiles()">Proses Data</button>
+        <button id="downloadBtn" onclick="downloadExcel()" style="display:none; background-color: #27ae60;">Download Excel</button>
+    </div>
+
+    <div id="status"></div>
+</div>
+
+<script>
+    let finalData = [];
+
+    async function processFiles() {
+        const fileInput = document.getElementById('fileInput');
+        const statusDiv = document.getElementById('status');
+        const processBtn = document.getElementById('processBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        if (fileInput.files.length === 0) {
+            alert("Silakan pilih file CSV terlebih dahulu.");
+            return;
+        }
+
+        processBtn.disabled = true;
+        statusDiv.innerHTML = "Memproses " + fileInput.files.length + " file...";
+        finalData = [];
+
+        for (let i = 0; i < fileInput.files.length; i++) {
+            const file = fileInput.files[i];
+            const text = await readFileAsText(file);
+            const cleanedData = cleanAndParseCSV(text);
+            finalData = finalData.concat(cleanedData);
+        }
+
+        // Mengurutkan berdasarkan tanggal
+        finalData.sort((a, b) => new Date(a['Tanggal Bukti Potong']) - new Date(b['Tanggal Bukti Potong']));
+
+        statusDiv.innerHTML = "Selesai! " + finalData.length + " baris data berhasil dirapikan.";
+        processBtn.disabled = false;
+        downloadBtn.style.display = "inline-block";
+    }
+
+    function readFileAsText(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = e => resolve(e.target.result);
+            reader.onerror = e => reject(e);
+            reader.readAsText(file);
+        });
+    }
+
+    function cleanAndParseCSV(rawText) {
+        let lines = rawText.split('\n');
+        let cleanedCsvText = "";
+
+        for (let line of lines) {
+            line = line.trim();
+            if (!line) continue;
+
+            // Membersihkan kolom error/garbage (seperti kasus bulan November)
+            if (line.includes(';;')) {
+                line = line.split(';;')[0];
+            }
+            line = line.replace(/;+$/, ''); // Hapus titik koma di akhir baris
+            
+            cleanedCsvText += line + "\n";
+        }
+
+        // Parsing CSV yang sudah bersih
+        let parsed = Papa.parse(cleanedCsvText, {
+            header: true,
+            skipEmptyLines: true,
+            quoteChar: '"'
+        });
+
+        let formattedData = [];
+
+        parsed.data.forEach(row => {
+            // Mapping nama kolom fleksibel (BPU vs BPUP)
+            let npwp = row.npwp_pemotong || row.lawan_transaksi || "";
+            let nama = row.nama_penerima_ph || row.nama_lt || "";
+            if(nama === "" && npwp !== "") nama = "PEMOTONG PAJAK (NPWP: " + npwp + ")";
+
+            // Format data sesuai standar
+            let cleanRow = {
+                "ID": row.id || "",
+                "Nomor Bukti Potong": row.nomor_bupot || "",
+                "Tanggal Bukti Potong": row.tgl_bupot || "",
+                "Masa Pajak": (row.masa_pajak || "").replace(/\.0$/, ""),
+                "Status": row.status_bupot || "",
+                "NPWP/TIN Lawan Transaksi": npwp.replace(/\.0$/, ""),
+                "Nama Lawan Transaksi": nama,
+                "Kode Objek Pajak": row.kop || "",
+                "DPP Bruto": parseFloat(row.dpp_bruto) || 0,
+                "PPh Dipotong": parseFloat(row.pph) || 0,
+                "Dokumen Dasar": row.doc_dp || "",
+                "Nomor Dokumen": row.no_doc_dp || ""
+            };
+            
+            // Mengambil field tambahan jika ada
+            if (row.nitku_pemotong) {
+                 cleanRow["Keterangan Tambahan"] = "NITKU: " + row.nitku_pemotong;
+            } else if (row.dilaporkan_di_spt) {
+                 cleanRow["Keterangan Tambahan"] = "Dilaporkan di SPT: " + row.dilaporkan_di_spt;
+            } else {
+                 cleanRow["Keterangan Tambahan"] = "";
+            }
+
+            if(cleanRow["ID"] !== "" && cleanRow["Nomor Bukti Potong"] !== "nomor_bupot") {
+                formattedData.push(cleanRow);
+            }
+        });
+
+        return formattedData;
+    }
+
+    function downloadExcel() {
+        if (finalData.length === 0) return;
+
+        // Membuat worksheet dan workbook Excel
+        const ws = XLSX.utils.json_to_sheet(finalData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Rekap_Bukti_Potong");
+
+        // Menyimpan file
+        XLSX.writeFile(wb, "Rekap_Bukti_Potong_Otomatis.xlsx");
+    }
+</script>
+
+</body>
+</html>
