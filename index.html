@@ -3,21 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alat Perapih File CSV</title>
+    <title>Alat Perapih CSV - PosIND</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 40px; }
-        .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h2 { color: #E2572B; margin-top: 0; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f4f7f6; 
+            color: #333; 
+            margin: 0; 
+            padding: 40px; 
+        }
+        .container { 
+            max-width: 850px; 
+            margin: 0 auto; 
+            background: #fff; 
+            padding: 30px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+            border-top: 6px solid #1C2D5A; /* Delft Blue */
+        }
+        h2 { color: #1C2D5A; margin-top: 0; }
+        .accent { color: #EF4123; /* Cinnabar */ }
         .form-group { margin-bottom: 20px; }
-        label { font-weight: bold; display: block; margin-bottom: 8px; }
-        select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 15px; }
-        .upload-area { border: 2px dashed #ccc; padding: 20px; text-align: center; border-radius: 8px; margin-bottom: 20px; background-color: #fafafa; }
-        input[type="file"] { margin-top: 10px; }
-        button { background-color: #E2572B; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 4px; cursor: pointer; margin-right: 10px; transition: background 0.3s; }
-        button:hover { background-color: #c44b25; }
+        label { font-weight: bold; display: block; margin-bottom: 8px; color: #1C2D5A; }
+        select { 
+            width: 100%; 
+            padding: 10px; 
+            border: 2px solid #ccc; 
+            border-radius: 4px; 
+            font-size: 15px; 
+            outline: none;
+        }
+        select:focus { border-color: #1C2D5A; }
+        .upload-area { 
+            border: 2px dashed #ccc; 
+            padding: 30px 20px; 
+            text-align: center; 
+            border-radius: 8px; 
+            margin-bottom: 20px; 
+            background-color: #fafafa; 
+            transition: all 0.3s;
+        }
+        .upload-area:hover { border-color: #1C2D5A; background-color: #f0f4fb; }
+        input[type="file"] { margin-top: 10px; font-size: 15px; }
+        button { 
+            background-color: #EF4123; /* Cinnabar */
+            color: white; 
+            border: none; 
+            padding: 12px 24px; 
+            font-size: 16px; 
+            font-weight: bold;
+            border-radius: 4px; 
+            cursor: pointer; 
+            margin-right: 10px; 
+            transition: background 0.3s; 
+        }
+        button:hover { background-color: #d1371c; }
         button:disabled { background-color: #ccc; cursor: not-allowed; }
+        #downloadBtn { background-color: #1C2D5A; /* Delft Blue */ }
+        #downloadBtn:hover { background-color: #131e3d; }
         #status { margin-top: 15px; font-weight: bold; color: #2c3e50; }
         .note { font-size: 13px; color: #7f8c8d; margin-top: 10px; }
     </style>
@@ -25,25 +70,26 @@
 <body>
 
 <div class="container">
-    <h2>Alat Perapih File CSV (Offline)</h2>
-    <p>Upload file CSV (Bukti Potong / Mile App), lalu download hasil Excel dengan format angka dan separator ribuan yang sempurna.</p>
+    <h2>Alat Perapih Data <span class="accent">PosIND</span></h2>
+    <p>Upload file CSV dari sistem, lalu download hasil Excel yang sudah <strong>terformat rapi (auto-width, warna header Delft Blue, & separator angka universal)</strong>.</p>
 
     <div class="form-group">
-        <label for="fileType">Pilih Jenis Data:</label>
+        <label for="fileType">Pilih Jenis Data yang Akan Dirapikan:</label>
         <select id="fileType">
             <option value="bukpot">Bukti Potong Pajak (BPU/BPUP)</option>
-            <option value="mileapp">Data Resi Mile App (POD)</option>
+            <option value="mileapp">Data Resi Mile App (POD Pusat)</option>
         </select>
     </div>
 
     <div class="upload-area">
+        <label for="fileInput" style="cursor: pointer; font-size: 16px;">Pilih File CSV Anda di sini:</label>
         <input type="file" id="fileInput" accept=".csv" multiple>
-        <div class="note">*Anda bisa memilih banyak file sekaligus dengan menahan tombol Ctrl/Shift.</div>
+        <div class="note">*Tips: Pilih lebih dari 1 file sekaligus (Ctrl/Shift+Klik) untuk menggabungkannya otomatis.</div>
     </div>
 
     <div>
         <button id="processBtn" onclick="processFiles()">Proses Data</button>
-        <button id="downloadBtn" onclick="downloadExcel()" style="display:none; background-color: #27ae60;">Download Excel</button>
+        <button id="downloadBtn" onclick="downloadExcel()" style="display:none;">Download Excel Rapi</button>
     </div>
 
     <div id="status"></div>
@@ -80,14 +126,15 @@
             }
         }
 
-        // Urutkan data berdasarkan tanggal
+        // Pengurutan berdasarkan tanggal yang sesuai
         if (fileTypeGlobal === 'bukpot') {
             finalData.sort((a, b) => new Date(a['Tanggal Bukti Potong']) - new Date(b['Tanggal Bukti Potong']));
         } else if (fileTypeGlobal === 'mileapp') {
-            finalData.sort((a, b) => new Date(a['Tgl Kirim']) - new Date(b['Tgl Kirim']));
+            // Urut berdasarkan string Tgl Kirim agar berurutan dengan baik
+            finalData.sort((a, b) => (a['Tgl Kirim'] > b['Tgl Kirim']) ? 1 : -1);
         }
 
-        statusDiv.innerHTML = "Selesai! " + finalData.length + " baris data berhasil dirapikan.";
+        statusDiv.innerHTML = "Selesai! " + finalData.length + " baris data berhasil dirapikan dan siap didownload.";
         processBtn.disabled = false;
         downloadBtn.style.display = "inline-block";
     }
@@ -101,7 +148,7 @@
         });
     }
 
-    // Pemrosesan Bukti Potong
+    // --- LOGIKA PEMROSESAN BUKTI POTONG ---
     function processBukpot(rawText) {
         let lines = rawText.split('\n');
         let cleanedCsvText = "";
@@ -109,6 +156,7 @@
         for (let line of lines) {
             line = line.trim();
             if (!line) continue;
+            // Bersihkan error delimiter berlebih
             if (line.includes(';;')) line = line.split(';;')[0];
             line = line.replace(/;+$/, ''); 
             cleanedCsvText += line + "\n";
@@ -146,8 +194,9 @@
         return formatted;
     }
 
-    // Pemrosesan Data Mile App
+    // --- LOGIKA PEMROSESAN MILE APP ---
     function processMileApp(rawText) {
+        // Mile app dipisahkan dengan titik koma (;)
         let parsed = Papa.parse(rawText, {
             header: true,
             skipEmptyLines: true,
@@ -157,10 +206,11 @@
         let formatted = [];
         
         parsed.data.forEach(row => {
-            // Hilangkan karakter koma bawaan sistem agar jadi pure angka
+            // Hapus koma bawaan string dan jadikan angka numerik sejati (parseFloat)
             let ongkirClean = (row["Ongkir"] || "0").replace(/,/g, '');
             let totalBeaClean = (row["Total Bea"] || "0").replace(/,/g, '');
             let ppnClean = (row["PPN"] || "0").replace(/,/g, '');
+            let htnbClean = (row["HTNB"] || "0").replace(/,/g, '');
             let beratClean = (row["Berat"] || "0").replace(/,/g, '');
             
             let cleanRow = {
@@ -168,11 +218,12 @@
                 "Layanan": row["Layanan"] || "",
                 "Nama Pengirim": row["Nama Pengirim"] || "",
                 "Penerima": row["Penerima"] || "",
-                "No HP": String(row["No HP"] || ""),
+                "No HP": String(row["No HP"] || "").replace(/\.0$/, ""),
                 "Kota Tujuan": row["Kota"] || "",
                 "Berat": parseFloat(beratClean) || 0,
                 "Ongkir": parseFloat(ongkirClean) || 0,
                 "PPN": parseFloat(ppnClean) || 0,
+                "HTNB": parseFloat(htnbClean) || 0,
                 "Total Bea": parseFloat(totalBeaClean) || 0,
                 "Tgl Kirim": row["Tgl Kirim"] || "",
                 "Status": row["Status"] || "",
@@ -185,36 +236,91 @@
                 formatted.push(cleanRow);
             }
         });
-        
         return formatted;
     }
 
+    // --- FUNGSI AUTO-WIDTH KOLOM ---
+    function fitToColumn(data) {
+        if (!data || data.length === 0) return [];
+        let colWidths = [];
+        let headers = Object.keys(data[0]);
+        
+        // Inisialisasi lebar dengan panjang judul header
+        headers.forEach((key, i) => {
+            colWidths[i] = key.length;
+        });
+        
+        // Cek data untuk mencari isi terpanjang di masing-masing kolom
+        data.forEach(row => {
+            headers.forEach((key, i) => {
+                let val = row[key];
+                let len = val ? val.toString().length : 0;
+                // Tambahkan sedikit padding panjang jika itu angka (untuk mengantisipasi titik ribuan)
+                if (typeof val === 'number') len += 3; 
+                if (len > colWidths[i]) {
+                    colWidths[i] = len;
+                }
+            });
+        });
+        
+        // Konversi ke format {wch: width} milik Excel (batas max width 60 agar tidak terlalu lebar)
+        return colWidths.map(w => ({ wch: Math.min(Math.max(w + 2, 10), 60) }));
+    }
+
+    // --- LOGIKA PEMBUATAN EXCEL & STYLING ---
     function downloadExcel() {
         if (finalData.length === 0) return;
 
-        // Mengubah JSON array menjadi format worksheet Excel
+        // Membuat Worksheet baru
         const ws = XLSX.utils.json_to_sheet(finalData);
-        
-        /* =======================================================
-           KODE BARU: MENERAPKAN FORMAT RIBUAN PADA SEMUA ANGKA
-           =======================================================
-        */
-        for (let cellAddress in ws) {
-            if (cellAddress[0] === '!') continue; // Lewati metadata sistem
-            
-            let cell = ws[cellAddress];
-            // Jika tipe cell adalah angka (n), berikan format number "universal"
-            if (cell.t === 'n') {
-                cell.z = '#,##0'; // Excel akan otomatis menyesuaikan koma/titik sesuai pengaturan laptop user
+
+        // 1. Terapkan Width/Lebar Kolom (Rapi)
+        ws['!cols'] = fitToColumn(finalData);
+
+        // 2. Menerapkan Gaya (Warna Header PosIND & Format Angka)
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        for (let R = range.s.r; R <= range.e.r; ++R) {
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+                const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+                if (!ws[cellRef]) continue;
+
+                // Definisi styling untuk cell
+                ws[cellRef].s = {};
+
+                // Bagian Baris 0 = Header Tabel
+                if (R === 0) {
+                    ws[cellRef].s = {
+                        fill: { fgColor: { rgb: "1C2D5A" } }, // Warna Delft Blue PosIND
+                        font: { bold: true, color: { rgb: "FFFFFF" }, name: "Arial", sz: 12 }, // Putih Tebal
+                        alignment: { horizontal: "center", vertical: "center", wrapText: true }
+                    };
+                } 
+                // Bagian Data (Baris >= 1)
+                else {
+                    // Font standar baris data
+                    ws[cellRef].s = { font: { name: "Arial", sz: 11 } };
+                    
+                    // Jika cell terdeteksi sebagai angka (number)
+                    if (ws[cellRef].t === 'n') {
+                        // Menerapkan "Thousand Separator" Excel asli.
+                        // Format ini otomatis dibaca sebagai titik atau koma sesuai setting local/region Windows user
+                        ws[cellRef].s.numFmt = "#,##0";
+                        ws[cellRef].s.alignment = { horizontal: "right" };
+                    } 
+                    // Perataan untuk tanggal dan teks pendek tertentu (opsional agar lebih rapi)
+                    else {
+                        ws[cellRef].s.alignment = { vertical: "center" };
+                    }
+                }
             }
         }
-        // =======================================================
 
+        // Simpan Workbook
         const wb = XLSX.utils.book_new();
-        let sheetName = fileTypeGlobal === 'bukpot' ? "Bukti_Potong" : "Data_Resi_MileApp";
+        let sheetName = fileTypeGlobal === 'bukpot' ? "Bukti_Potong" : "Resi_MileApp";
         XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
-        let fileName = fileTypeGlobal === 'bukpot' ? "Rekap_Bukti_Potong_Rapih.xlsx" : "Rekap_MileApp_Rapih.xlsx";
+        let fileName = fileTypeGlobal === 'bukpot' ? "Rekap_Bukti_Potong_PosIND.xlsx" : "Rekap_MileApp_PosIND.xlsx";
         XLSX.writeFile(wb, fileName);
     }
 </script>
