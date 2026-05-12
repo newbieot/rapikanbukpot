@@ -7,40 +7,147 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 40px; }
-        .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-top: 6px solid #1C2D5A; }
-        .logo-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #f1f3f5; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f4f7f6; 
+            color: #333; 
+            margin: 0; 
+            padding: 40px 20px; 
+        }
+        .container { 
+            max-width: 900px; 
+            margin: 0 auto; 
+            background: #fff; 
+            padding: 40px; 
+            border-radius: 12px; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1); 
+            border-top: 6px solid #1C2D5A; 
+        }
+        
+        .logo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f1f3f5;
+        }
         .logo-danantara { height: 50px; width: auto; object-fit: contain; }
         .logo-posind { height: 42px; width: auto; object-fit: contain; }
+
         h2 { color: #1C2D5A; margin-top: 0; text-align: center; }
         .accent { color: #EF4123; }
-        p.subtitle { text-align: center; color: #666; margin-bottom: 25px; }
+        p.subtitle { text-align: center; color: #666; margin-bottom: 30px; }
 
-        /* TAB UI */
-        .tab-container { display: flex; flex-wrap: wrap; gap: 5px; background-color: #f1f3f5; padding: 6px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #e2e8f0; }
-        .tab-btn { flex: 1; min-width: 200px; text-align: center; padding: 14px 10px; font-size: 14px; font-weight: bold; color: #555; cursor: pointer; border-radius: 6px; transition: all 0.25s; border: none; background: none; }
+        /* TAB UI & UX STYLE */
+        .tab-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            background-color: #f1f3f5;
+            padding: 6px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border: 1px solid #e2e8f0;
+        }
+        .tab-btn {
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+            padding: 14px 10px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #555;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.25s ease-in-out;
+            user-select: none;
+            border: none;
+            background: none;
+        }
         .tab-btn:hover { color: #1C2D5A; background-color: #e2e8f0; }
-        .tab-btn.active { background-color: #1C2D5A; color: #ffffff; box-shadow: 0 4px 6px rgba(28, 45, 90, 0.2); }
+        .tab-btn.active {
+            background-color: #1C2D5A; 
+            color: #ffffff;
+            box-shadow: 0 4px 6px rgba(28, 45, 90, 0.2);
+        }
         
         /* Area Upload */
-        .upload-area { border: 2px dashed #cbd5e1; padding: 45px 20px; text-align: center; border-radius: 8px; margin-bottom: 25px; background-color: #fafafa; transition: all 0.3s; cursor: pointer; }
+        .upload-area { 
+            border: 2px dashed #cbd5e1; 
+            padding: 50px 20px; 
+            text-align: center; 
+            border-radius: 8px; 
+            margin-bottom: 25px; 
+            background-color: #fafafa; 
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
         .upload-area:hover { border-color: #1C2D5A; background-color: #f8fafc; }
-        .upload-area.dragover { background-color: #e0e7ff; border-color: #EF4123; transform: scale(1.015); }
+        .upload-area.dragover {
+            background-color: #e0e7ff;
+            border-color: #EF4123;
+            transform: scale(1.015);
+        }
         input[type="file"] { display: none; }
-        .upload-label-btn { background-color: #fff; border: 2px solid #1C2D5A; color: #1C2D5A; padding: 10px 20px; border-radius: 4px; font-weight: bold; display: inline-block; margin-bottom: 12px; transition: all 0.2s; }
-        .upload-area:hover .upload-label-btn { background-color: #1C2D5A; color: #fff; }
         
-        /* Tombol */
+        .upload-label-btn {
+            background-color: #fff;
+            border: 2px solid #1C2D5A;
+            color: #1C2D5A;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+        .upload-area:hover .upload-label-btn {
+            background-color: #1C2D5A;
+            color: #fff;
+        }
+        
+        /* Tombol Aksi */
         .btn-group { display: flex; justify-content: center; gap: 15px; }
-        button.action-btn { background-color: #EF4123; color: white; border: none; padding: 14px 28px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; transition: background 0.3s, transform 0.1s; }
+        button.action-btn { 
+            background-color: #EF4123; 
+            color: white; 
+            border: none; 
+            padding: 14px 32px; 
+            font-size: 16px; 
+            font-weight: bold;
+            border-radius: 6px; 
+            cursor: pointer; 
+            transition: background 0.3s, transform 0.1s; 
+        }
         button.action-btn:hover { background-color: #d1371c; }
         button.action-btn:active { transform: scale(0.98); }
         button.action-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+        
         #downloadBtn { background-color: #27ae60; }
         #downloadBtn:hover { background-color: #219653; }
+        
         #status { margin-top: 20px; font-weight: bold; color: #2c3e50; text-align: center; font-size: 15px; }
         .note { font-size: 13px; color: #7f8c8d; margin-top: 10px; }
         #fileCount { font-weight: bold; color: #EF4123; margin-top: 15px; display: block; font-size: 15px; }
+
+        /* Footer Style */
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+            font-size: 13px;
+            color: #64748b;
+            line-height: 1.6;
+        }
+        .footer strong {
+            color: #1C2D5A;
+        }
+        .footer .creator {
+            font-style: italic;
+            color: #EF4123;
+        }
     </style>
 </head>
 <body>
@@ -62,7 +169,7 @@
 
     <div class="upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
         <span class="upload-label-btn">Pilih File CSV / Excel</span>
-        <p style="font-weight: 500; margin: 5px 0;">atau Seret & Letakkan (Drag & Drop) file Anda di sini</p>
+        <p style="font-weight: 500; margin: 5px 0; color: #475569;">atau Seret & Letakkan (Drag & Drop) file Anda di sini</p>
         <input type="file" id="fileInput" accept=".csv, .xlsx, .xls" multiple>
         <div class="note">*Mendukung penggabungan beberapa file sekaligus secara otomatis.</div>
         <span id="fileCount">Belum ada file terpilih</span>
@@ -74,13 +181,18 @@
     </div>
 
     <div id="status"></div>
+
+    <div class="footer">
+        Dibuat oleh <strong>Corporate Sales Team KCU Batam 29400</strong><br>
+        <span class="creator">Creator: newbieot | Supported by Gemini AI</span>
+    </div>
 </div>
 
 <script>
     let finalData = [];
     let fileTypeGlobal = 'bukpot';
 
-    // Drag and Drop Logic
+    // --- INTERAKSI DRAG AND DROP ---
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
     const fileCountText = document.getElementById('fileCount');
@@ -90,13 +202,14 @@
         document.body.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
     });
 
-    ['dragenter', 'dragover'].forEach(eventName => dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false));
-    ['dragleave', 'drop'].forEach(eventName => dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false));
+    ['dragenter', 'dragover'].forEach(eventName => { dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false); });
+    ['dragleave', 'drop'].forEach(eventName => { dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false); });
 
     dropZone.addEventListener('drop', e => {
         dropZone.classList.remove('dragover');
-        if (e.dataTransfer.files.length > 0) {
-            fileInput.files = e.dataTransfer.files;
+        const dt = e.dataTransfer;
+        if (dt.files && dt.files.length > 0) {
+            fileInput.files = dt.files;
             updateFileCount();
         }
     }, false);
@@ -119,6 +232,7 @@
         fileTypeGlobal = type;
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.getElementById('tab-' + type).classList.add('active');
+        
         fileInput.value = "";
         updateFileCount();
         resetStatus();
@@ -139,16 +253,16 @@
         return upperText;
     }
 
-    // Process Files
+    // --- PROSES PEMBACAAN FILE ---
     async function processFiles() {
         const statusDiv = document.getElementById('status');
         const processBtn = document.getElementById('processBtn');
         const downloadBtn = document.getElementById('downloadBtn');
 
-        if (fileInput.files.length === 0) return alert("Silakan pilih file terlebih dahulu.");
+        if (fileInput.files.length === 0) return alert("Silakan pilih atau seret file Anda ke area upload.");
 
         processBtn.disabled = true;
-        statusDiv.innerHTML = "Sedang merapikan data... Mohon tunggu.";
+        statusDiv.innerHTML = "Sedang merapikan data... Mohon tunggu sebentar.";
         finalData = [];
 
         try {
@@ -156,15 +270,18 @@
                 const file = fileInput.files[i];
                 const ext = file.name.split('.').pop().toLowerCase();
                 
+                // JIka File Excel (XLSX/XLS)
                 if (ext === 'xlsx' || ext === 'xls') {
                     const buffer = await readFileAsArrayBuffer(file);
                     const workbook = XLSX.read(buffer, { type: 'array' });
-                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const dataArray = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const dataArray = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: "" });
                     
                     if (fileTypeGlobal === 'pranpp') finalData = finalData.concat(processPranppXlsx(dataArray));
-                    else alert(`File "${file.name}" berformat Excel. Harap gunakan CSV untuk Tab ini.`);
-                } else {
+                    else alert(`Data "${file.name}" berformat Excel. Harap gunakan CSV untuk Tab ini.`);
+                } 
+                // Jika File CSV
+                else {
                     const text = await readFileAsText(file);
                     if (fileTypeGlobal === 'bukpot') finalData = finalData.concat(processBukpot(text));
                     else if (fileTypeGlobal === 'mileapp') finalData = finalData.concat(processMileApp(text));
@@ -172,7 +289,7 @@
                 }
             }
 
-            // Sorting
+            // Sorting Data
             if (fileTypeGlobal === 'bukpot') {
                 finalData.sort((a, b) => new Date(a['Tanggal Bukti Potong']) - new Date(b['Tanggal Bukti Potong']));
             } else if (fileTypeGlobal === 'mileapp') {
@@ -250,6 +367,7 @@
             };
             if (row.nitku_pemotong) cleanRow["Keterangan Tambahan"] = "NITKU: " + row.nitku_pemotong;
             else if (row.dilaporkan_di_spt) cleanRow["Keterangan Tambahan"] = "Dilaporkan di SPT: " + row.dilaporkan_di_spt;
+            
             if(cleanRow["ID"] && cleanRow["Nomor Bukti Potong"] !== "nomor_bupot") formatted.push(cleanRow);
         });
         return formatted;
@@ -283,17 +401,21 @@
         return formatted;
     }
 
-    // --- LOGIKA PRANPP ---
-    function fixCutNumber(val) {
-        if (!val) return 0;
+    // --- LOGIKA WEB PRANPP ---
+    function cleanRupiah(val) {
+        if (val === undefined || val === null || val === "") return 0;
+        if (typeof val === 'number') return val; 
+        
         let strVal = String(val).trim();
         
+        // 1. Format dengan "Rp"
         if (strVal.match(/Rp/i)) {
             strVal = strVal.replace(/Rp/gi, '').replace(/\./g, '').replace(/ /g, '');
             strVal = strVal.replace(/,/g, '.'); 
             return parseFloat(strVal) || 0;
-        }
-
+        } 
+        
+        // 2. Format CSV angka biasa (bisa jadi terpotong nolnya oleh Excel)
         if (!strVal.includes('.') && !strVal.includes(',')) {
             let num = parseFloat(strVal);
             if (num > 0 && num < 1000) return num * 1000;
@@ -311,6 +433,7 @@
             }
         }
         
+        // Default cleanup
         strVal = strVal.replace(/\./g, '');
         return parseFloat(strVal.replace(/,/g, '.')) || 0;
     }
@@ -336,15 +459,15 @@
                 "Jenis Biaya": row[7] || "",
                 "Status Dokumen": row[9] || "",
                 "Pemilik Anggaran": row[10] || "",
-                "BSU": fixCutNumber(row[11]),
+                "BSU": cleanRupiah(row[11]),
                 "Keterangan": row[12] || "",
-                "BSU Pajak": fixCutNumber(row[13]),
-                "Total": fixCutNumber(row[14]),
-                "Pajak": fixCutNumber(row[15]),
-                "Total BSU": fixCutNumber(row[17]),
-                "Total Pajak": fixCutNumber(row[18]),
-                "Total BSU+Pajak": fixCutNumber(row[19]),
-                "Nomor Internal Order": String(row[20] || "").trim() // Dipaksa jadi text
+                "BSU Pajak": cleanRupiah(row[13]),
+                "Total": cleanRupiah(row[14]),
+                "Pajak": cleanRupiah(row[15]),
+                "Total BSU": cleanRupiah(row[17]),
+                "Total Pajak": cleanRupiah(row[18]),
+                "Total BSU+Pajak": cleanRupiah(row[19]),
+                "Nomor Internal Order": String(row[20] || "").trim() 
             };
             formatted.push(cleanRow);
         }
@@ -369,22 +492,22 @@
                 "Jenis Biaya": row["Jenis Biaya"] || "",
                 "Status Dokumen": row["Status Dokumen"] || "",
                 "Pemilik Anggaran": row["Pemilik Anggaran"] || "",
-                "BSU": fixCutNumber(row["BSU"]),
+                "BSU": cleanRupiah(row["BSU"]),
                 "Keterangan": row["Keterangan"] || "",
-                "BSU Pajak": fixCutNumber(row["BSU Pajak"]),
-                "Total": fixCutNumber(row["Total"]),
-                "Pajak": fixCutNumber(row["Pajak"]),
-                "Total BSU": fixCutNumber(row["Total BSU"]),
-                "Total Pajak": fixCutNumber(row["Total Pajak"]),
-                "Total BSU+Pajak": fixCutNumber(row["Total BSU+Pajak"]),
-                "Nomor Internal Order": String(row["Nomor Internal Order"] || "").trim() // Dipaksa jadi text
+                "BSU Pajak": cleanRupiah(row["BSU Pajak"]),
+                "Total": cleanRupiah(row["Total"]),
+                "Pajak": cleanRupiah(row["Pajak"]),
+                "Total BSU": cleanRupiah(row["Total BSU"]),
+                "Total Pajak": cleanRupiah(row["Total Pajak"]),
+                "Total BSU+Pajak": cleanRupiah(row["Total BSU+Pajak"]),
+                "Nomor Internal Order": String(row["Nomor Internal Order"] || "").trim()
             };
             formatted.push(cleanRow);
         });
         return formatted;
     }
 
-    // --- FUNGSI AUTO-WIDTH ---
+    // --- FUNGSI AUTO-WIDTH ESTIMATOR ---
     function fitToColumn(data) {
         if (!data || data.length === 0) return [];
         let colWidths = [];
@@ -453,7 +576,6 @@
                             }
                         };
                         
-                        // DAFTAR KOLOM YANG HARUS DIKUNCI SEBAGAI TEKS (GENERAL FORMAT)
                         const textColumns = [
                             "Nomor Internal Order", 
                             "Nomor Dokumen", 
@@ -465,12 +587,10 @@
                         ];
 
                         if (textColumns.includes(headerName)) {
-                            // Paksakan format String/Teks murni, buang separator
                             ws[cellRef].t = 's'; 
                             ws[cellRef].v = String(ws[cellRef].v);
                             ws[cellRef].s.alignment.horizontal = "left";
                         }
-                        // Format kolom angka ribuan (kecuali pengecualian di atas)
                         else if (ws[cellRef].t === 'n') {
                             if (headerName === "No" || headerName === "Berat") {
                                 ws[cellRef].s.alignment.horizontal = "center";
