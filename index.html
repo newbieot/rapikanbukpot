@@ -235,18 +235,18 @@
             let nama = row.nama_penerima_ph || row.nama_lt || "";
             if(nama === "" && npwp !== "") nama = "PEMOTONG PAJAK (NPWP: " + npwp + ")";
             let cleanRow = {
-                "ID": row.id || "",
-                "Nomor Bukti Potong": row.nomor_bupot || "",
+                "ID": String(row.id || ""),
+                "Nomor Bukti Potong": String(row.nomor_bupot || ""),
                 "Tanggal Bukti Potong": row.tgl_bupot || "",
-                "Masa Pajak": (row.masa_pajak || "").replace(/\.0$/, ""),
+                "Masa Pajak": String(row.masa_pajak || "").replace(/\.0$/, ""),
                 "Status": row.status_bupot || "",
-                "NPWP/TIN Lawan Transaksi": npwp.replace(/\.0$/, ""),
+                "NPWP/TIN Lawan Transaksi": String(npwp).replace(/\.0$/, ""),
                 "Nama Lawan Transaksi": formatTeksRapi(nama),
                 "Kode Objek Pajak": row.kop || "",
                 "DPP Bruto": parseFloat(row.dpp_bruto) || 0,
                 "PPh Dipotong": parseFloat(row.pph) || 0,
                 "Dokumen Dasar": formatTeksRapi(row.doc_dp),
-                "Nomor Dokumen": row.no_doc_dp || ""
+                "Nomor Dokumen": String(row.no_doc_dp || "")
             };
             if (row.nitku_pemotong) cleanRow["Keterangan Tambahan"] = "NITKU: " + row.nitku_pemotong;
             else if (row.dilaporkan_di_spt) cleanRow["Keterangan Tambahan"] = "Dilaporkan di SPT: " + row.dilaporkan_di_spt;
@@ -283,45 +283,34 @@
         return formatted;
     }
 
-    // --- LOGIKA PRANPP (PERBAIKAN BUG ANGKA) ---
+    // --- LOGIKA PRANPP ---
     function fixCutNumber(val) {
         if (!val) return 0;
         let strVal = String(val).trim();
         
-        // Cek apakah string ini berisi "Rp" (format langsung bisa diambil)
         if (strVal.match(/Rp/i)) {
             strVal = strVal.replace(/Rp/gi, '').replace(/\./g, '').replace(/ /g, '');
             strVal = strVal.replace(/,/g, '.'); 
             return parseFloat(strVal) || 0;
         }
 
-        // Jika angka murni (tanpa Rp), tapi terpotong oleh Excel (Contoh: "300", "50", "314.72")
-        // Kita periksa apakah ada koma desimal atau titik.
-        
-        // 1. Jika angkanya bulat kecil (misal "300" atau "50") dari sistem akuntansi PRANPP
-        // Seringkali 300.000 menjadi 300 di CSV Indonesia
         if (!strVal.includes('.') && !strVal.includes(',')) {
             let num = parseFloat(strVal);
-            // Angka 1-999 yang sebenarnya adalah ribuan
             if (num > 0 && num < 1000) return num * 1000;
             return num || 0;
         }
 
-        // 2. Jika ada titik sebagai desimal (Contoh: "314.72")
         if (strVal.includes('.') && !strVal.includes(',')) {
             let parts = strVal.split('.');
             if (parts.length === 2) {
                 let left = parts[0];
                 let right = parts[1];
-                // Jika "314.72" -> 314720
                 if (right.length === 1) return parseFloat(left + right + "00");
                 if (right.length === 2) return parseFloat(left + right + "0");
-                // "1.250" -> 1250000
                 if (right.length === 3) return parseFloat(strVal.replace('.', ''));
             }
         }
         
-        // Default pembersihan normal
         strVal = strVal.replace(/\./g, '');
         return parseFloat(strVal.replace(/,/g, '.')) || 0;
     }
@@ -340,7 +329,7 @@
             
             let cleanRow = {
                 "No": parseInt(row[1]) || 0,
-                "Nomor Dokumen": row[2] || "",
+                "Nomor Dokumen": String(row[2] || "").trim(),
                 "Masa Laku": row[4] || "",
                 "Dokumen": row[5] || "",
                 "Tanggal Transaksi": row[6] || "",
@@ -355,7 +344,7 @@
                 "Total BSU": fixCutNumber(row[17]),
                 "Total Pajak": fixCutNumber(row[18]),
                 "Total BSU+Pajak": fixCutNumber(row[19]),
-                "Nomor Internal Order": row[20] || ""
+                "Nomor Internal Order": String(row[20] || "").trim() // Dipaksa jadi text
             };
             formatted.push(cleanRow);
         }
@@ -373,7 +362,7 @@
 
             let cleanRow = {
                 "No": parseInt(row["No"]) || 0,
-                "Nomor Dokumen": row["Nomor Dokumen"] || "",
+                "Nomor Dokumen": String(row["Nomor Dokumen"] || "").trim(),
                 "Masa Laku": row["Masa Laku"] || "",
                 "Dokumen": row["Dokumen"] || "",
                 "Tanggal Transaksi": row["Tanggal Transaksi"] || "",
@@ -388,14 +377,14 @@
                 "Total BSU": fixCutNumber(row["Total BSU"]),
                 "Total Pajak": fixCutNumber(row["Total Pajak"]),
                 "Total BSU+Pajak": fixCutNumber(row["Total BSU+Pajak"]),
-                "Nomor Internal Order": row["Nomor Internal Order"] || ""
+                "Nomor Internal Order": String(row["Nomor Internal Order"] || "").trim() // Dipaksa jadi text
             };
             formatted.push(cleanRow);
         });
         return formatted;
     }
 
-    // --- FUNGSI AUTO-WIDTH ESTIMATOR ---
+    // --- FUNGSI AUTO-WIDTH ---
     function fitToColumn(data) {
         if (!data || data.length === 0) return [];
         let colWidths = [];
@@ -437,6 +426,7 @@
                     if (!ws[cellRef]) continue;
 
                     ws[cellRef].s = {};
+                    let headerName = Object.keys(finalData[0])[C];
 
                     if (R === 0) {
                         ws[cellRef].s = {
@@ -463,8 +453,25 @@
                             }
                         };
                         
-                        if (ws[cellRef].t === 'n') {
-                            let headerName = Object.keys(finalData[0])[C];
+                        // DAFTAR KOLOM YANG HARUS DIKUNCI SEBAGAI TEKS (GENERAL FORMAT)
+                        const textColumns = [
+                            "Nomor Internal Order", 
+                            "Nomor Dokumen", 
+                            "No Resi", 
+                            "No HP", 
+                            "NPWP/TIN Lawan Transaksi",
+                            "Masa Pajak",
+                            "ID"
+                        ];
+
+                        if (textColumns.includes(headerName)) {
+                            // Paksakan format String/Teks murni, buang separator
+                            ws[cellRef].t = 's'; 
+                            ws[cellRef].v = String(ws[cellRef].v);
+                            ws[cellRef].s.alignment.horizontal = "left";
+                        }
+                        // Format kolom angka ribuan (kecuali pengecualian di atas)
+                        else if (ws[cellRef].t === 'n') {
                             if (headerName === "No" || headerName === "Berat") {
                                 ws[cellRef].s.alignment.horizontal = "center";
                             } else {
