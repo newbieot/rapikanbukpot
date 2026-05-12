@@ -75,10 +75,10 @@
         /* Area Upload */
         .upload-area { 
             border: 2px dashed #cbd5e1; 
-            padding: 50px 20px; 
+            padding: 40px 20px; 
             text-align: center; 
             border-radius: 8px; 
-            margin-bottom: 25px; 
+            margin-bottom: 15px; 
             background-color: #fafafa; 
             transition: all 0.3s ease;
             cursor: pointer;
@@ -102,8 +102,50 @@
             margin-bottom: 12px;
             transition: all 0.2s;
         }
-        .upload-area:hover .upload-label-btn {
-            background-color: #1C2D5A;
+        .upload-area:hover .upload-label-btn { background-color: #1C2D5A; color: #fff; }
+
+        /* LIST DAFTAR FILE (BARU) */
+        .file-list-container {
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #334155;
+            transition: all 0.2s;
+        }
+        .file-item:hover {
+            background-color: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+        .file-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            word-break: break-all;
+        }
+        .file-remove-btn {
+            background-color: #fee2e2;
+            color: #ef4444;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .file-remove-btn:hover {
+            background-color: #ef4444;
             color: #fff;
         }
         
@@ -141,13 +183,8 @@
             color: #64748b;
             line-height: 1.6;
         }
-        .footer strong {
-            color: #1C2D5A;
-        }
-        .footer .creator {
-            font-style: italic;
-            color: #EF4123;
-        }
+        .footer strong { color: #1C2D5A; }
+        .footer .creator { color: #EF4123; }
     </style>
 </head>
 <body>
@@ -168,15 +205,17 @@
     </div>
 
     <div class="upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
-        <span class="upload-label-btn">Pilih File CSV / Excel</span>
-        <p style="font-weight: 500; margin: 5px 0; color: #475569;">atau Seret & Letakkan (Drag & Drop) file Anda di sini</p>
+        <span class="upload-label-btn">+ Tambah File CSV / Excel</span>
+        <p style="font-weight: 500; margin: 5px 0; color: #475569;">atau Seret & Letakkan (Drag & Drop) file Anda ke area ini berkali-kali</p>
         <input type="file" id="fileInput" accept=".csv, .xlsx, .xls" multiple>
-        <div class="note">*Mendukung penggabungan beberapa file sekaligus secara otomatis.</div>
+        <div class="note">*Mendukung penggabungan banyak file sekaligus.</div>
         <span id="fileCount">Belum ada file terpilih</span>
     </div>
 
+    <div class="file-list-container" id="fileListContainer"></div>
+
     <div class="btn-group">
-        <button id="processBtn" class="action-btn" onclick="processFiles()">Proses Data</button>
+        <button id="processBtn" class="action-btn" onclick="processFiles()">Proses Semua Data</button>
         <button id="downloadBtn" class="action-btn" onclick="downloadExcel()" style="display:none;">Download Excel Rapi</button>
     </div>
 
@@ -191,11 +230,15 @@
 <script>
     let finalData = [];
     let fileTypeGlobal = 'bukpot';
+    
+    // VARIABEL GLOBAL UNTUK MENAMPUNG AKUMULASI FILE
+    let selectedFilesArray = [];
 
-    // --- INTERAKSI DRAG AND DROP ---
+    // --- INTERAKSI DRAG AND DROP & FILE SELECTION ---
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
     const fileCountText = document.getElementById('fileCount');
+    const fileListContainer = document.getElementById('fileListContainer');
 
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         dropZone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
@@ -205,36 +248,83 @@
     ['dragenter', 'dragover'].forEach(eventName => { dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false); });
     ['dragleave', 'drop'].forEach(eventName => { dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false); });
 
+    // Saat Drop File
     dropZone.addEventListener('drop', e => {
         dropZone.classList.remove('dragover');
-        const dt = e.dataTransfer;
-        if (dt.files && dt.files.length > 0) {
-            fileInput.files = dt.files;
-            updateFileCount();
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            handleNewFiles(e.dataTransfer.files);
         }
     }, false);
 
-    fileInput.addEventListener('change', updateFileCount);
+    // Saat Klik "Pilih File"
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+            handleNewFiles(e.target.files);
+        }
+        // Reset input agar bisa memilih file yang sama lagi jika tidak sengaja terhapus
+        fileInput.value = ""; 
+    });
 
-    function updateFileCount() {
-        const count = fileInput.files.length;
-        if (count > 0) {
-            fileCountText.innerHTML = `✔️ ${count} file siap diproses.`;
+    // Fungsi Menambahkan File ke Penampungan
+    function handleNewFiles(files) {
+        for (let i = 0; i < files.length; i++) {
+            // Hindari memasukkan file ganda (opsional, berdasarkan nama & ukuran)
+            let isDuplicate = selectedFilesArray.some(f => f.name === files[i].name && f.size === files[i].size);
+            if (!isDuplicate) {
+                selectedFilesArray.push(files[i]);
+            }
+        }
+        updateFileListUI();
+        resetStatus();
+    }
+
+    // Fungsi Menghapus File dari Penampungan
+    function removeFile(index) {
+        selectedFilesArray.splice(index, 1);
+        updateFileListUI();
+        resetStatus();
+    }
+
+    // Fungsi Memperbarui Tampilan Daftar File
+    function updateFileListUI() {
+        fileListContainer.innerHTML = '';
+        
+        if (selectedFilesArray.length > 0) {
+            fileCountText.innerHTML = `✔️ ${selectedFilesArray.length} file siap diproses.`;
             fileCountText.style.color = "#27ae60";
+            
+            selectedFilesArray.forEach((file, index) => {
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                
+                // Konversi ukuran file ke KB/MB
+                let size = (file.size / 1024).toFixed(1);
+                let sizeText = size > 1024 ? (size / 1024).toFixed(2) + " MB" : size + " KB";
+
+                item.innerHTML = `
+                    <div class="file-name">
+                        <span style="font-size:18px;">📄</span> 
+                        <span><strong>${file.name}</strong> <span style="color:#94a3b8; font-size:12px;">(${sizeText})</span></span>
+                    </div>
+                    <button class="file-remove-btn" onclick="event.stopPropagation(); removeFile(${index})">✖ Hapus</button>
+                `;
+                fileListContainer.appendChild(item);
+            });
         } else {
             fileCountText.innerHTML = "Belum ada file terpilih";
             fileCountText.style.color = "#EF4123";
         }
-        resetStatus();
     }
 
+    // --- LOGIKA TAB ---
     function switchTab(type) {
         fileTypeGlobal = type;
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.getElementById('tab-' + type).classList.add('active');
         
-        fileInput.value = "";
-        updateFileCount();
+        // Bersihkan daftar file saat ganti tab agar tidak nyasar
+        selectedFilesArray = [];
+        updateFileListUI();
         resetStatus();
     }
 
@@ -259,18 +349,18 @@
         const processBtn = document.getElementById('processBtn');
         const downloadBtn = document.getElementById('downloadBtn');
 
-        if (fileInput.files.length === 0) return alert("Silakan pilih atau seret file Anda ke area upload.");
+        // BACA DARI ARRAY BUKAN DARI INPUT LANGSUNG
+        if (selectedFilesArray.length === 0) return alert("Silakan tambah file terlebih dahulu.");
 
         processBtn.disabled = true;
         statusDiv.innerHTML = "Sedang merapikan data... Mohon tunggu sebentar.";
         finalData = [];
 
         try {
-            for (let i = 0; i < fileInput.files.length; i++) {
-                const file = fileInput.files[i];
+            for (let i = 0; i < selectedFilesArray.length; i++) {
+                const file = selectedFilesArray[i];
                 const ext = file.name.split('.').pop().toLowerCase();
                 
-                // JIka File Excel (XLSX/XLS)
                 if (ext === 'xlsx' || ext === 'xls') {
                     const buffer = await readFileAsArrayBuffer(file);
                     const workbook = XLSX.read(buffer, { type: 'array' });
@@ -280,7 +370,6 @@
                     if (fileTypeGlobal === 'pranpp') finalData = finalData.concat(processPranppXlsx(dataArray));
                     else alert(`Data "${file.name}" berformat Excel. Harap gunakan CSV untuk Tab ini.`);
                 } 
-                // Jika File CSV
                 else {
                     const text = await readFileAsText(file);
                     if (fileTypeGlobal === 'bukpot') finalData = finalData.concat(processBukpot(text));
@@ -298,7 +387,7 @@
                 finalData.sort((a, b) => parseDmyDate(a['Tanggal Transaksi']) - parseDmyDate(b['Tanggal Transaksi']));
             }
 
-            statusDiv.innerHTML = `🎉 Sukses! ${finalData.length} baris data berhasil dirapikan.`;
+            statusDiv.innerHTML = `🎉 Sukses! ${finalData.length} baris data dari ${selectedFilesArray.length} file berhasil dirapikan.`;
             downloadBtn.style.display = "inline-block";
         } catch (error) {
             statusDiv.innerHTML = "❌ Terjadi kesalahan saat membaca file.";
@@ -408,14 +497,12 @@
         
         let strVal = String(val).trim();
         
-        // 1. Format dengan "Rp"
         if (strVal.match(/Rp/i)) {
             strVal = strVal.replace(/Rp/gi, '').replace(/\./g, '').replace(/ /g, '');
             strVal = strVal.replace(/,/g, '.'); 
             return parseFloat(strVal) || 0;
         } 
         
-        // 2. Format CSV angka biasa (bisa jadi terpotong nolnya oleh Excel)
         if (!strVal.includes('.') && !strVal.includes(',')) {
             let num = parseFloat(strVal);
             if (num > 0 && num < 1000) return num * 1000;
@@ -433,7 +520,6 @@
             }
         }
         
-        // Default cleanup
         strVal = strVal.replace(/\./g, '');
         return parseFloat(strVal.replace(/,/g, '.')) || 0;
     }
