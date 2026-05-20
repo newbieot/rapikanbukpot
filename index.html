@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alat Perapih Data - PosIND & Danantara</title>
-    <link rel="icon" type="image/png" href="favicon-rapikanbukpot.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <style>
@@ -16,7 +15,7 @@
             padding: 40px 20px; 
         }
         .container { 
-            max-width: 900px; 
+            max-width: 950px; 
             margin: 0 auto; 
             background: #fff; 
             padding: 40px; 
@@ -53,10 +52,10 @@
         }
         .tab-btn {
             flex: 1;
-            min-width: 200px;
+            min-width: 180px;
             text-align: center;
-            padding: 14px 10px;
-            font-size: 14px;
+            padding: 12px 10px;
+            font-size: 13.5px;
             font-weight: bold;
             color: #555;
             cursor: pointer;
@@ -105,7 +104,7 @@
         }
         .upload-area:hover .upload-label-btn { background-color: #1C2D5A; color: #fff; }
 
-        /* LIST DAFTAR FILE (BARU) */
+        /* LIST DAFTAR FILE */
         .file-list-container {
             margin-bottom: 25px;
             display: flex;
@@ -124,16 +123,8 @@
             color: #334155;
             transition: all 0.2s;
         }
-        .file-item:hover {
-            background-color: #f1f5f9;
-            border-color: #cbd5e1;
-        }
-        .file-name {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            word-break: break-all;
-        }
+        .file-item:hover { background-color: #f1f5f9; border-color: #cbd5e1; }
+        .file-name { display: flex; align-items: center; gap: 8px; word-break: break-all; }
         .file-remove-btn {
             background-color: #fee2e2;
             color: #ef4444;
@@ -145,10 +136,7 @@
             font-size: 12px;
             transition: all 0.2s;
         }
-        .file-remove-btn:hover {
-            background-color: #ef4444;
-            color: #fff;
-        }
+        .file-remove-btn:hover { background-color: #ef4444; color: #fff; }
         
         /* Tombol Aksi */
         .btn-group { display: flex; justify-content: center; gap: 15px; }
@@ -203,12 +191,13 @@
         <button class="tab-btn active" id="tab-bukpot" onclick="switchTab('bukpot')">Bukti Potong (BPU/BPUP)</button>
         <button class="tab-btn" id="tab-mileapp" onclick="switchTab('mileapp')">Resi Mile App (POD)</button>
         <button class="tab-btn" id="tab-pranpp" onclick="switchTab('pranpp')">Dokumen Web PRANPP</button>
+        <button class="tab-btn" id="tab-pid" onclick="switchTab('pid')">Web PID (Lacak Kiriman)</button>
     </div>
 
     <div class="upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
-        <span class="upload-label-btn">+ Tambah File CSV / Excel</span>
+        <span class="upload-label-btn">+ Tambah File (CSV / XLS / HTML)</span>
         <p style="font-weight: 500; margin: 5px 0; color: #475569;">atau Seret & Letakkan (Drag & Drop) file Anda ke area ini berkali-kali</p>
-        <input type="file" id="fileInput" accept=".csv, .xlsx, .xls" multiple>
+        <input type="file" id="fileInput" accept=".csv, .xlsx, .xls, .html" multiple>
         <div class="note">*Mendukung penggabungan banyak file sekaligus.</div>
         <span id="fileCount">Belum ada file terpilih</span>
     </div>
@@ -231,8 +220,6 @@
 <script>
     let finalData = [];
     let fileTypeGlobal = 'bukpot';
-    
-    // VARIABEL GLOBAL UNTUK MENAMPUNG AKUMULASI FILE
     let selectedFilesArray = [];
 
     // --- INTERAKSI DRAG AND DROP & FILE SELECTION ---
@@ -249,7 +236,6 @@
     ['dragenter', 'dragover'].forEach(eventName => { dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false); });
     ['dragleave', 'drop'].forEach(eventName => { dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false); });
 
-    // Saat Drop File
     dropZone.addEventListener('drop', e => {
         dropZone.classList.remove('dragover');
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
@@ -257,51 +243,36 @@
         }
     }, false);
 
-    // Saat Klik "Pilih File"
     fileInput.addEventListener('change', (e) => {
-        if (e.target.files && e.target.files.length > 0) {
-            handleNewFiles(e.target.files);
-        }
-        // Reset input agar bisa memilih file yang sama lagi jika tidak sengaja terhapus
+        if (e.target.files && e.target.files.length > 0) handleNewFiles(e.target.files);
         fileInput.value = ""; 
     });
 
-    // Fungsi Menambahkan File ke Penampungan
     function handleNewFiles(files) {
         for (let i = 0; i < files.length; i++) {
-            // Hindari memasukkan file ganda (opsional, berdasarkan nama & ukuran)
             let isDuplicate = selectedFilesArray.some(f => f.name === files[i].name && f.size === files[i].size);
-            if (!isDuplicate) {
-                selectedFilesArray.push(files[i]);
-            }
+            if (!isDuplicate) selectedFilesArray.push(files[i]);
         }
         updateFileListUI();
         resetStatus();
     }
 
-    // Fungsi Menghapus File dari Penampungan
     function removeFile(index) {
         selectedFilesArray.splice(index, 1);
         updateFileListUI();
         resetStatus();
     }
 
-    // Fungsi Memperbarui Tampilan Daftar File
     function updateFileListUI() {
         fileListContainer.innerHTML = '';
-        
         if (selectedFilesArray.length > 0) {
             fileCountText.innerHTML = `✔️ ${selectedFilesArray.length} file siap diproses.`;
             fileCountText.style.color = "#27ae60";
-            
             selectedFilesArray.forEach((file, index) => {
                 const item = document.createElement('div');
                 item.className = 'file-item';
-                
-                // Konversi ukuran file ke KB/MB
                 let size = (file.size / 1024).toFixed(1);
                 let sizeText = size > 1024 ? (size / 1024).toFixed(2) + " MB" : size + " KB";
-
                 item.innerHTML = `
                     <div class="file-name">
                         <span style="font-size:18px;">📄</span> 
@@ -317,13 +288,10 @@
         }
     }
 
-    // --- LOGIKA TAB ---
     function switchTab(type) {
         fileTypeGlobal = type;
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.getElementById('tab-' + type).classList.add('active');
-        
-        // Bersihkan daftar file saat ganti tab agar tidak nyasar
         selectedFilesArray = [];
         updateFileListUI();
         resetStatus();
@@ -350,7 +318,6 @@
         const processBtn = document.getElementById('processBtn');
         const downloadBtn = document.getElementById('downloadBtn');
 
-        // BACA DARI ARRAY BUKAN DARI INPUT LANGSUNG
         if (selectedFilesArray.length === 0) return alert("Silakan tambah file terlebih dahulu.");
 
         processBtn.disabled = true;
@@ -362,30 +329,64 @@
                 const file = selectedFilesArray[i];
                 const ext = file.name.split('.').pop().toLowerCase();
                 
-                if (ext === 'xlsx' || ext === 'xls') {
+                // Mendeteksi HTML yang menyamar sebagai XLS
+                const textPreview = await readFileAsText(file);
+                const isHtmlDisguised = textPreview.trim().toLowerCase().startsWith('<');
+
+                // Jika terdeteksi sebagai File Web/HTML murni (termasuk .xls dari web PID)
+                if (isHtmlDisguised || ext === 'html') {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(textPreview, 'text/html');
+                    const table = doc.querySelector('table');
+                    let dataArray = [];
+                    if (table) {
+                        const rows = table.querySelectorAll('tr');
+                        rows.forEach(row => {
+                            const rowData = [];
+                            row.querySelectorAll('th, td').forEach(cell => {
+                                rowData.push(cell.textContent.trim()); // Menggunakan textContent agar bersih
+                            });
+                            dataArray.push(rowData);
+                        });
+                    }
+
+                    if (fileTypeGlobal === 'pranpp') finalData = finalData.concat(processPranppXlsx(dataArray));
+                    else if (fileTypeGlobal === 'pid') finalData = finalData.concat(processPidArray(dataArray));
+                    else alert(`File "${file.name}" terdeteksi sebagai HTML/XLS Web. Harap gunakan Tab yang sesuai (PRANPP/PID).`);
+                } 
+                // Jika File Excel Murni (.xlsx / .xls standar non-HTML)
+                else if (ext === 'xlsx' || ext === 'xls') {
                     const buffer = await readFileAsArrayBuffer(file);
                     const workbook = XLSX.read(buffer, { type: 'array' });
                     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                     const dataArray = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: "" });
                     
                     if (fileTypeGlobal === 'pranpp') finalData = finalData.concat(processPranppXlsx(dataArray));
-                    else alert(`Data "${file.name}" berformat Excel. Harap gunakan CSV untuk Tab ini.`);
+                    else if (fileTypeGlobal === 'pid') finalData = finalData.concat(processPidArray(dataArray));
+                    else alert(`Data "${file.name}" berformat Excel asli. Harap gunakan CSV untuk Tab ini.`);
                 } 
+                // Jika File CSV murni
                 else {
-                    const text = await readFileAsText(file);
-                    if (fileTypeGlobal === 'bukpot') finalData = finalData.concat(processBukpot(text));
-                    else if (fileTypeGlobal === 'mileapp') finalData = finalData.concat(processMileApp(text));
-                    else if (fileTypeGlobal === 'pranpp') finalData = finalData.concat(processPranppCsv(text));
+                    if (fileTypeGlobal === 'bukpot') finalData = finalData.concat(processBukpot(textPreview));
+                    else if (fileTypeGlobal === 'mileapp') finalData = finalData.concat(processMileApp(textPreview));
+                    else if (fileTypeGlobal === 'pranpp') finalData = finalData.concat(processPranppCsv(textPreview));
+                    else alert(`File PID Lacak Kiriman seharusnya berbentuk Excel/HTML.`);
                 }
             }
 
-            // Sorting Data
+            // Sorting Data Berdasarkan Tab
             if (fileTypeGlobal === 'bukpot') {
                 finalData.sort((a, b) => new Date(a['Tanggal Bukti Potong']) - new Date(b['Tanggal Bukti Potong']));
             } else if (fileTypeGlobal === 'mileapp') {
                 finalData.sort((a, b) => parseDmyDate(a['Tgl Kirim']) - parseDmyDate(b['Tgl Kirim']));
             } else if (fileTypeGlobal === 'pranpp') {
                 finalData.sort((a, b) => parseDmyDate(a['Tanggal Transaksi']) - parseDmyDate(b['Tanggal Transaksi']));
+            } else if (fileTypeGlobal === 'pid') {
+                finalData.sort((a, b) => {
+                    let d1 = parseDmyDate(a['Tanggal Kirim'] || a['Tgl Kirim']);
+                    let d2 = parseDmyDate(b['Tanggal Kirim'] || b['Tgl Kirim']);
+                    return d1 - d2;
+                });
             }
 
             statusDiv.innerHTML = `🎉 Sukses! ${finalData.length} baris data dari ${selectedFilesArray.length} file berhasil dirapikan.`;
@@ -491,25 +492,73 @@
         return formatted;
     }
 
+    // --- LOGIKA WEB PID (LACAK KIRIMAN) BARU ---
+    function processPidArray(dataArray) {
+        if (dataArray.length < 2) return [];
+        
+        let headerIdx = -1;
+        // Mencari otomatis baris mana yang merupakan header utama tabel PID
+        for (let i = 0; i < Math.min(10, dataArray.length); i++) {
+            if (dataArray[i].includes("Nomor Resi") || dataArray[i].includes("Kantor Asal")) { 
+                headerIdx = i; 
+                break; 
+            }
+        }
+        if (headerIdx === -1) return [];
+
+        let headers = dataArray[headerIdx];
+        let formatted = [];
+
+        for (let i = headerIdx + 1; i < dataArray.length; i++) {
+            let row = dataArray[i];
+            if (!row || row.length < 3 || !row[1]) continue; // Abaikan baris kosong
+            
+            let cleanRow = {};
+            for (let c = 0; c < headers.length; c++) {
+                let colName = headers[c] || `Column_${c}`;
+                let val = row[c] !== undefined ? row[c] : "";
+                cleanRow[colName] = val;
+            }
+
+            // Pembersihan Angka Uang PID
+            if (cleanRow["Bea Dasar"] !== undefined) cleanRow["Bea Dasar"] = cleanRupiah(cleanRow["Bea Dasar"]);
+            if (cleanRow["Htnb"] !== undefined) cleanRow["Htnb"] = cleanRupiah(cleanRow["Htnb"]);
+            if (cleanRow["Total"] !== undefined) cleanRow["Total"] = cleanRupiah(cleanRow["Total"]);
+            if (cleanRow["Harga Barang"] !== undefined) cleanRow["Harga Barang"] = cleanRupiah(cleanRow["Harga Barang"]);
+            // Untuk berat biasanya desimal (contoh: 0.02)
+            if (cleanRow["Berat Kiriman"] !== undefined) cleanRow["Berat Kiriman"] = parseFloat(String(cleanRow["Berat Kiriman"]).replace(/,/g, '.')) || 0;
+
+            // Pembersihan String/Teks Tlp, Resi & Kode (Buang angka .0 bawaan Export)
+            const textCols = ["Nomor Resi", "Tlp Pengirim", "Tlp Penerima", "Kodepos Tujuan", "Virtual Account", "Nopend Asal", "Nopend Tujuan"];
+            for (let tc of textCols) {
+                if (cleanRow[tc] !== undefined) cleanRow[tc] = String(cleanRow[tc]).replace(/\.0$/, "");
+            }
+            
+            // Penyeragaman Teks Nama dan Kota (Otomatis Kapital)
+            if (cleanRow["Nama Pengirim"] !== undefined) cleanRow["Nama Pengirim"] = formatTeksRapi(cleanRow["Nama Pengirim"]);
+            if (cleanRow["Nama Penerima"] !== undefined) cleanRow["Nama Penerima"] = formatTeksRapi(cleanRow["Nama Penerima"]);
+            if (cleanRow["Kota Penerima"] !== undefined) cleanRow["Kota Penerima"] = formatTeksRapi(cleanRow["Kota Penerima"]);
+
+            formatted.push(cleanRow);
+        }
+        return formatted;
+    }
+
     // --- LOGIKA WEB PRANPP ---
     function cleanRupiah(val) {
         if (val === undefined || val === null || val === "") return 0;
         if (typeof val === 'number') return val; 
-        
         let strVal = String(val).trim();
-        
         if (strVal.match(/Rp/i)) {
             strVal = strVal.replace(/Rp/gi, '').replace(/\./g, '').replace(/ /g, '');
             strVal = strVal.replace(/,/g, '.'); 
             return parseFloat(strVal) || 0;
         } 
-        
         if (!strVal.includes('.') && !strVal.includes(',')) {
             let num = parseFloat(strVal);
             if (num > 0 && num < 1000) return num * 1000;
             return num || 0;
         }
-
         if (strVal.includes('.') && !strVal.includes(',')) {
             let parts = strVal.split('.');
             if (parts.length === 2) {
@@ -520,7 +569,6 @@
                 if (right.length === 3) return parseFloat(strVal.replace('.', ''));
             }
         }
-        
         strVal = strVal.replace(/\./g, '');
         return parseFloat(strVal.replace(/,/g, '.')) || 0;
     }
@@ -531,12 +579,10 @@
             if (dataArray[i].includes("Nomor Dokumen")) { headerIdx = i; break; }
         }
         if (headerIdx === -1) return [];
-        
         let formatted = [];
         for(let i = headerIdx + 1; i < dataArray.length; i++) {
             let row = dataArray[i];
             if (!row || row.length < 3 || !row[1]) continue; 
-            
             let cleanRow = {
                 "No": parseInt(row[1]) || 0,
                 "Nomor Dokumen": String(row[2] || "").trim(),
@@ -564,12 +610,10 @@
     function processPranppCsv(rawText) {
         let lines = rawText.split('\n');
         while (lines.length > 0 && !lines[0].includes('Nomor Dokumen')) lines.shift(); 
-        
         let parsed = Papa.parse(lines.join('\n'), { header: true, skipEmptyLines: true });
         let formatted = [];
         parsed.data.forEach(row => {
             if (!row["No"] || row["No"].trim() === "") return;
-
             let cleanRow = {
                 "No": parseInt(row["No"]) || 0,
                 "Nomor Dokumen": String(row["Nomor Dokumen"] || "").trim(),
@@ -663,14 +707,11 @@
                             }
                         };
                         
+                        // DAFTAR KOLOM YANG HARUS DIKUNCI SEBAGAI TEKS (TIDAK ADA SEPARATOR)
                         const textColumns = [
-                            "Nomor Internal Order", 
-                            "Nomor Dokumen", 
-                            "No Resi", 
-                            "No HP", 
-                            "NPWP/TIN Lawan Transaksi",
-                            "Masa Pajak",
-                            "ID"
+                            "Nomor Internal Order", "Nomor Dokumen", "No Resi", "Nomor Resi", "No HP", 
+                            "Tlp Pengirim", "Tlp Penerima", "Kodepos Tujuan", "Virtual Account", 
+                            "NPWP/TIN Lawan Transaksi", "Masa Pajak", "ID", "Nopend Asal", "Nopend Tujuan"
                         ];
 
                         if (textColumns.includes(headerName)) {
@@ -707,6 +748,9 @@
             } else if (fileTypeGlobal === 'pranpp') {
                 sheetName = "Data_PRANPP";
                 fileName = "Rekap_Dokumen_PRANPP_PosIND.xlsx";
+            } else if (fileTypeGlobal === 'pid') {
+                sheetName = "Data_PID";
+                fileName = "Rekap_Lacak_Kiriman_PID.xlsx";
             }
 
             XLSX.utils.book_append_sheet(wb, ws, sheetName);
