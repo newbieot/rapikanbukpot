@@ -7,13 +7,23 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <style>
+        /* STRUKTUR UTAMA AGAR FOOTER SELALU DI BAWAH */
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background-color: #f4f7f6; 
             color: #333; 
             margin: 0; 
-            padding: 40px 20px; 
+            padding: 0; 
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
+        
+        .main-content {
+            flex: 1;
+            padding: 40px 20px;
+        }
+
         .container { 
             max-width: 950px; 
             margin: 0 auto; 
@@ -162,131 +172,113 @@
         .note { font-size: 13px; color: #7f8c8d; margin-top: 10px; }
         #fileCount { font-weight: bold; color: #EF4123; margin-top: 15px; display: block; font-size: 15px; }
 
-        /* Footer Style */
-        .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e2e8f0;
-            text-align: center;
-            font-size: 13px;
-            color: #64748b;
-            line-height: 1.6;
+        /* DASHBOARD FOOTER (UNIVERSAL & MUTLAK 1 BARIS) */
+        .dashboard-footer {
+            width: 100%;
+            box-sizing: border-box;
+            background-color: #0f172a;
+            border-top: 3px solid #EF4123;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 24px;
+            margin-top: auto;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            z-index: 20;
+            height: 60px; /* Kunci jadi satu baris */
+            overflow: hidden;
         }
-        .footer strong { color: #1C2D5A; }
-        .footer .creator { color: #EF4123; }
+        .footer-brand {
+            display: flex; align-items: center; gap: 8px;
+            color: #f8fafc; font-weight: 700; font-size: 0.95rem; letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        .footer-desc { 
+            color: #94a3b8; font-size: 0.8rem; margin: 0 15px; 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            text-align: center; flex: 1;
+        }
+        .footer-creator-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(239, 65, 35, 0.1); border: 1px solid rgba(239, 65, 35, 0.2);
+            padding: 5px 14px; border-radius: 20px; color: #e2e8f0; font-size: 0.75rem;
+            white-space: nowrap; transition: all 0.3s ease;
+        }
+        .footer-creator-badge:hover { 
+            background: rgba(239, 65, 35, 0.2); border-color: rgba(239, 65, 35, 0.5); 
+        }
+        .footer-creator-badge strong { color: #EF4123; font-weight: 600; }
+
+        /* Responsif Mobile */
+        @media (max-width: 850px) {
+            .dashboard-footer { 
+                flex-direction: column; justify-content: center; gap: 8px; 
+                padding: 15px; height: auto; 
+            }
+            .footer-desc { display: none; }
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="logo-header">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Danantara_Indonesia.svg/1280px-Danantara_Indonesia.svg.png" alt="Logo Danantara" class="logo-danantara">
-        <img src="https://admin-piol.posindonesia.co.id/media/PosIND_Main%20Color.png" alt="Logo PosIND" class="logo-posind">
+<!-- WADAH KONTEN UTAMA -->
+<div class="main-content">
+    <div class="container">
+        <div class="logo-header">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Danantara_Indonesia.svg/1280px-Danantara_Indonesia.svg.png" alt="Logo Danantara" class="logo-danantara">
+            <img src="https://admin-piol.posindonesia.co.id/media/PosIND_Main%20Color.png" alt="Logo PosIND" class="logo-posind">
+        </div>
+
+        <h2>Alat Perapih Data <span class="accent">PosIND</span></h2>
+        <p class="subtitle">Gabungkan dan rapikan file laporan Anda secara lokal dan aman.</p>
+
+        <div class="tab-container">
+            <button class="tab-btn active" id="tab-bukpot" onclick="switchTab('bukpot')">Bukti Potong (BPU/BPUP)</button>
+            <button class="tab-btn" id="tab-mileapp" onclick="switchTab('mileapp')">Resi Mile App (POD)</button>
+            <button class="tab-btn" id="tab-pranpp" onclick="switchTab('pranpp')">Dokumen Web PRANPP</button>
+            <button class="tab-btn" id="tab-pid" onclick="switchTab('pid')">Web PID (Lacak Kiriman)</button>
+        </div>
+
+        <div class="upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
+            <span class="upload-label-btn">+ Tambah File (CSV / XLS / HTML)</span>
+            <p style="font-weight: 500; margin: 5px 0; color: #475569;">atau Seret & Letakkan (Drag & Drop) file Anda ke area ini berkali-kali</p>
+            <input type="file" id="fileInput" accept=".csv, .xlsx, .xls, .html" multiple>
+            <div class="note">*Mendukung penggabungan banyak file sekaligus.</div>
+            <span id="fileCount">Belum ada file terpilih</span>
+        </div>
+
+        <div class="file-list-container" id="fileListContainer"></div>
+
+        <div class="btn-group">
+            <button id="processBtn" class="action-btn" onclick="processFiles()">Proses Semua Data</button>
+            <button id="downloadBtn" class="action-btn" onclick="downloadExcel()" style="display:none;">Download Excel Rapi</button>
+        </div>
+
+        <div id="status"></div>
     </div>
+</div>
 
-    <h2>Alat Perapih Data <span class="accent">PosIND</span></h2>
-    <p class="subtitle">Gabungkan dan rapikan file laporan Anda secara lokal dan aman.</p>
-
-    <div class="tab-container">
-        <button class="tab-btn active" id="tab-bukpot" onclick="switchTab('bukpot')">Bukti Potong (BPU/BPUP)</button>
-        <button class="tab-btn" id="tab-mileapp" onclick="switchTab('mileapp')">Resi Mile App (POD)</button>
-        <button class="tab-btn" id="tab-pranpp" onclick="switchTab('pranpp')">Dokumen Web PRANPP</button>
-        <button class="tab-btn" id="tab-pid" onclick="switchTab('pid')">Web PID (Lacak Kiriman)</button>
-    </div>
-
-    <div class="upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
-        <span class="upload-label-btn">+ Tambah File (CSV / XLS / HTML)</span>
-        <p style="font-weight: 500; margin: 5px 0; color: #475569;">atau Seret & Letakkan (Drag & Drop) file Anda ke area ini berkali-kali</p>
-        <input type="file" id="fileInput" accept=".csv, .xlsx, .xls, .html" multiple>
-        <div class="note">*Mendukung penggabungan banyak file sekaligus.</div>
-        <span id="fileCount">Belum ada file terpilih</span>
-    </div>
-
-    <div class="file-list-container" id="fileListContainer"></div>
-
-    <div class="btn-group">
-        <button id="processBtn" class="action-btn" onclick="processFiles()">Proses Semua Data</button>
-        <button id="downloadBtn" class="action-btn" onclick="downloadExcel()" style="display:none;">Download Excel Rapi</button>
-    </div>
-
-    <div id="status"></div>
-<!-- Modern SaaS Footer (SLIM, DARK & FULL-WIDTH) -->
-<style>
-    .modern-footer {
-        width: 100%; /* Memaksa footer memanjang dari ujung ke ujung */
-        box-sizing: border-box; /* Mencegah footer tumpah keluar layar */
-        margin-top: 4rem; 
-        padding: 2rem 1rem 1.5rem 1rem; 
-        background-color: #0f172a; 
-        border-top: 4px solid #FF5722; 
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.8rem; 
-        font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    .footer-brand {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: #f8fafc; 
-        font-weight: 700;
-        font-size: 1.1rem;
-        letter-spacing: 0.5px;
-    }
-    .footer-desc {
-        color: #94a3b8; 
-        font-size: 0.85rem;
-        text-align: center;
-        max-width: 500px;
-        line-height: 1.5;
-        margin: 0;
-    }
-    .footer-creator-badge {
-        margin-top: 0.5rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: rgba(255, 87, 34, 0.1);
-        border: 1px solid rgba(255, 87, 34, 0.2);
-        padding: 6px 16px; 
-        border-radius: 30px;
-        color: #e2e8f0;
-        font-size: 0.8rem;
-        transition: all 0.3s ease;
-    }
-    .footer-creator-badge:hover {
-        background: rgba(255, 87, 34, 0.2);
-        border-color: rgba(255, 87, 34, 0.5);
-        box-shadow: 0 0 10px rgba(255, 87, 34, 0.2);
-        transform: translateY(-2px);
-    }
-    .footer-creator-badge strong {
-        color: #FF5722;
-        font-weight: 600;
-        letter-spacing: 0.3px;
-    }
-</style>
-
-<footer class="modern-footer">
+<!-- FOOTER DASHBOARD -->
+<footer class="dashboard-footer">
     <div class="footer-brand">
-        <i data-lucide="layers" style="color: #FF5722; width: 20px; height: 20px;"></i>
+        <i data-lucide="layers" style="color: #EF4123; width: 18px; height: 18px;"></i>
         PosNew Hub
     </div>
-    <p class="footer-desc">
-        Sistem utilitas ini dikembangkan secara independen untuk optimalisasi efisiensi layanan logistik B2B dan Ritel.
-    </p>
+    <p class="footer-desc">Sistem utilitas ini dikembangkan secara independen untuk optimalisasi efisiensi layanan logistik B2B dan Ritel.</p>
     <div class="footer-creator-badge">
-        <i data-lucide="code-2" style="color: #FF5722; width: 14px; height: 14px;"></i>
+        <i data-lucide="code-2" style="color: #EF4123; width: 14px; height: 14px;"></i>
         Inovasi oleh <strong>Ikhsan Radiansyah</strong> &copy; 2026
     </div>
 </footer>
 
-<!-- Pastikan pemanggil ikon ini tetap ada di paling bawah -->
+<!-- SCRIPT IKON LUCIDE -->
 <script src="https://unpkg.com/lucide@latest"></script>
 <script>
-    lucide.createIcons();
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
 </script>
+
 <script>
     let finalData = [];
     let fileTypeGlobal = 'bukpot';
