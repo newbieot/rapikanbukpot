@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alat Perapih Data - PosIND by Ikhsan Radiansyah</title>
+    <!-- Library Pembaca CSV -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- Library Pembuat Excel & Pembaca XLSX -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <style>
         /* STRUKTUR UTAMA AGAR FOOTER SELALU DI BAWAH */
@@ -185,7 +187,7 @@
             margin-top: auto;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             z-index: 20;
-            height: 60px; /* Kunci jadi satu baris */
+            height: 60px;
             overflow: hidden;
         }
         .footer-brand {
@@ -209,7 +211,6 @@
         }
         .footer-creator-badge strong { color: #EF4123; font-weight: 600; }
 
-        /* Responsif Mobile */
         @media (max-width: 850px) {
             .dashboard-footer { 
                 flex-direction: column; justify-content: center; gap: 8px; 
@@ -221,7 +222,6 @@
 </head>
 <body>
 
-<!-- WADAH KONTEN UTAMA -->
 <div class="main-content">
     <div class="container">
         <div class="logo-header">
@@ -258,7 +258,6 @@
     </div>
 </div>
 
-<!-- FOOTER DASHBOARD -->
 <footer class="dashboard-footer">
     <div class="footer-brand">
         <i data-lucide="layers" style="color: #EF4123; width: 18px; height: 18px;"></i>
@@ -271,7 +270,6 @@
     </div>
 </footer>
 
-<!-- SCRIPT IKON LUCIDE -->
 <script src="https://unpkg.com/lucide@latest"></script>
 <script>
     if (typeof lucide !== 'undefined') {
@@ -284,7 +282,6 @@
     let fileTypeGlobal = 'bukpot';
     let selectedFilesArray = [];
 
-    // --- INTERAKSI DRAG AND DROP & FILE SELECTION ---
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
     const fileCountText = document.getElementById('fileCount');
@@ -374,7 +371,6 @@
         return upperText;
     }
 
-    // --- PROSES PEMBACAAN FILE ---
     async function processFiles() {
         const statusDiv = document.getElementById('status');
         const processBtn = document.getElementById('processBtn');
@@ -391,11 +387,9 @@
                 const file = selectedFilesArray[i];
                 const ext = file.name.split('.').pop().toLowerCase();
                 
-                // Mendeteksi HTML yang menyamar sebagai XLS
                 const textPreview = await readFileAsText(file);
                 const isHtmlDisguised = textPreview.trim().toLowerCase().startsWith('<');
 
-                // Jika terdeteksi sebagai File Web/HTML murni (termasuk .xls dari web PID)
                 if (isHtmlDisguised || ext === 'html') {
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(textPreview, 'text/html');
@@ -406,7 +400,7 @@
                         rows.forEach(row => {
                             const rowData = [];
                             row.querySelectorAll('th, td').forEach(cell => {
-                                rowData.push(cell.textContent.trim()); // Menggunakan textContent agar bersih
+                                rowData.push(cell.textContent.trim());
                             });
                             dataArray.push(rowData);
                         });
@@ -416,7 +410,6 @@
                     else if (fileTypeGlobal === 'pid') finalData = finalData.concat(processPidArray(dataArray));
                     else alert(`File "${file.name}" terdeteksi sebagai HTML/XLS Web. Harap gunakan Tab yang sesuai (PRANPP/PID).`);
                 } 
-                // Jika File Excel Murni (.xlsx / .xls standar non-HTML)
                 else if (ext === 'xlsx' || ext === 'xls') {
                     const buffer = await readFileAsArrayBuffer(file);
                     const workbook = XLSX.read(buffer, { type: 'array' });
@@ -427,7 +420,6 @@
                     else if (fileTypeGlobal === 'pid') finalData = finalData.concat(processPidArray(dataArray));
                     else alert(`Data "${file.name}" berformat Excel asli. Harap gunakan CSV untuk Tab ini.`);
                 } 
-                // Jika File CSV murni
                 else {
                     if (fileTypeGlobal === 'bukpot') finalData = finalData.concat(processBukpot(textPreview));
                     else if (fileTypeGlobal === 'mileapp') finalData = finalData.concat(processMileApp(textPreview));
@@ -436,7 +428,6 @@
                 }
             }
 
-            // Sorting Data Berdasarkan Tab
             if (fileTypeGlobal === 'bukpot') {
                 finalData.sort((a, b) => new Date(a['Tanggal Bukti Potong']) - new Date(b['Tanggal Bukti Potong']));
             } else if (fileTypeGlobal === 'mileapp') {
@@ -526,40 +517,47 @@
         return formatted;
     }
 
-    // --- LOGIKA MILE APP ---
+    // --- LOGIKA MILE APP (POD) - DIPERBAIKI (TIDAK MEMOTONG KOLOM) ---
     function processMileApp(rawText) {
         let parsed = Papa.parse(rawText, { header: true, skipEmptyLines: true, delimiter: ";" });
         let formatted = [];
+        
+        // Kategori kolom untuk proses pembersihan
+        const numCols = ["Berat", "Ongkir", "PPN", "HTNB", "Total Bea"];
+        const textCols = ["Nama Pengirim", "Penerima", "Alamat", "Kota", "Status", "Kiriman Diterima Oleh", "Petugas  Eintri", "Instruksi Pengriman", "Deskripsi", "Jenis", "Layanan"];
+        const stringCleanCols = ["No Resi", "No HP", "Kode pos Penerima", "Nip/NIK", "No VA", "Norek", "Norek ", "ID Pelanggan"];
+
         parsed.data.forEach(row => {
-            let cleanRow = {
-                "No Resi": String(row["No Resi"] || ""),
-                "Layanan": row["Layanan"] || "",
-                "Nama Pengirim": formatTeksRapi(row["Nama Pengirim"]),
-                "Penerima": formatTeksRapi(row["Penerima"]),
-                "No HP": String(row["No HP"] || "").replace(/\.0$/, ""),
-                "Kota Tujuan": formatTeksRapi(row["Kota"]),
-                "Berat": parseFloat((row["Berat"] || "0").replace(/,/g, '')) || 0,
-                "Ongkir": parseFloat((row["Ongkir"] || "0").replace(/,/g, '')) || 0,
-                "PPN": parseFloat((row["PPN"] || "0").replace(/,/g, '')) || 0,
-                "HTNB": parseFloat((row["HTNB"] || "0").replace(/,/g, '')) || 0,
-                "Total Bea": parseFloat((row["Total Bea"] || "0").replace(/,/g, '')) || 0,
-                "Tgl Kirim": row["Tgl Kirim"] || "",
-                "Status": formatTeksRapi(row["Status"]),
-                "Kiriman Diterima Oleh": formatTeksRapi(row["Kiriman Diterima Oleh"]),
-                "Tgl Update": row["Tgl Update"] || "",
-                "Petugas": formatTeksRapi(row["Petugas  Eintri"])
-            };
-            if(cleanRow["No Resi"] && cleanRow["No Resi"] !== "No Resi") formatted.push(cleanRow);
+            if(!row["No Resi"] || row["No Resi"] === "No Resi") return;
+
+            let cleanRow = {};
+            // Looping dinamis agar SEMUA 29 kolom ikut terbaca & terbawa
+            for (let key in row) {
+                let val = row[key] !== undefined ? String(row[key]) : "";
+                
+                if (numCols.includes(key)) {
+                    cleanRow[key] = parseFloat(val.replace(/,/g, '')) || 0;
+                } 
+                else if (textCols.includes(key)) {
+                    cleanRow[key] = formatTeksRapi(val);
+                } 
+                else if (stringCleanCols.includes(key) || key.includes("Norek")) {
+                    cleanRow[key] = val.replace(/\.0$/, "");
+                } 
+                else {
+                    cleanRow[key] = val; // Sisa kolom di-pass secara utuh tanpa diubah
+                }
+            }
+            formatted.push(cleanRow);
         });
         return formatted;
     }
 
-    // --- LOGIKA WEB PID (LACAK KIRIMAN) BARU ---
+    // --- LOGIKA WEB PID (LACAK KIRIMAN) ---
     function processPidArray(dataArray) {
         if (dataArray.length < 2) return [];
         
         let headerIdx = -1;
-        // Mencari otomatis baris mana yang merupakan header utama tabel PID
         for (let i = 0; i < Math.min(10, dataArray.length); i++) {
             if (dataArray[i].includes("Nomor Resi") || dataArray[i].includes("Kantor Asal")) { 
                 headerIdx = i; 
@@ -573,7 +571,7 @@
 
         for (let i = headerIdx + 1; i < dataArray.length; i++) {
             let row = dataArray[i];
-            if (!row || row.length < 3 || !row[1]) continue; // Abaikan baris kosong
+            if (!row || row.length < 3 || !row[1]) continue; 
             
             let cleanRow = {};
             for (let c = 0; c < headers.length; c++) {
@@ -582,24 +580,22 @@
                 cleanRow[colName] = val;
             }
 
-            // Pembersihan Angka Uang PID
             if (cleanRow["Bea Dasar"] !== undefined) cleanRow["Bea Dasar"] = cleanRupiah(cleanRow["Bea Dasar"]);
             if (cleanRow["Htnb"] !== undefined) cleanRow["Htnb"] = cleanRupiah(cleanRow["Htnb"]);
             if (cleanRow["Total"] !== undefined) cleanRow["Total"] = cleanRupiah(cleanRow["Total"]);
             if (cleanRow["Harga Barang"] !== undefined) cleanRow["Harga Barang"] = cleanRupiah(cleanRow["Harga Barang"]);
-            // Untuk berat biasanya desimal (contoh: 0.02)
             if (cleanRow["Berat Kiriman"] !== undefined) cleanRow["Berat Kiriman"] = parseFloat(String(cleanRow["Berat Kiriman"]).replace(/,/g, '.')) || 0;
 
-            // Pembersihan String/Teks Tlp, Resi & Kode (Buang angka .0 bawaan Export)
             const textCols = ["Nomor Resi", "Tlp Pengirim", "Tlp Penerima", "Kodepos Tujuan", "Virtual Account", "Nopend Asal", "Nopend Tujuan"];
             for (let tc of textCols) {
                 if (cleanRow[tc] !== undefined) cleanRow[tc] = String(cleanRow[tc]).replace(/\.0$/, "");
             }
             
-            // Penyeragaman Teks Nama dan Kota (Otomatis Kapital)
             if (cleanRow["Nama Pengirim"] !== undefined) cleanRow["Nama Pengirim"] = formatTeksRapi(cleanRow["Nama Pengirim"]);
             if (cleanRow["Nama Penerima"] !== undefined) cleanRow["Nama Penerima"] = formatTeksRapi(cleanRow["Nama Penerima"]);
             if (cleanRow["Kota Penerima"] !== undefined) cleanRow["Kota Penerima"] = formatTeksRapi(cleanRow["Kota Penerima"]);
+            if (cleanRow["Alamat Pengirim"] !== undefined) cleanRow["Alamat Pengirim"] = formatTeksRapi(cleanRow["Alamat Pengirim"]);
+            if (cleanRow["Alamat Penerima"] !== undefined) cleanRow["Alamat Penerima"] = formatTeksRapi(cleanRow["Alamat Penerima"]);
 
             formatted.push(cleanRow);
         }
@@ -773,7 +769,8 @@
                         const textColumns = [
                             "Nomor Internal Order", "Nomor Dokumen", "No Resi", "Nomor Resi", "No HP", 
                             "Tlp Pengirim", "Tlp Penerima", "Kodepos Tujuan", "Virtual Account", 
-                            "NPWP/TIN Lawan Transaksi", "Masa Pajak", "ID", "Nopend Asal", "Nopend Tujuan"
+                            "NPWP/TIN Lawan Transaksi", "Masa Pajak", "ID", "Nopend Asal", "Nopend Tujuan",
+                            "Kode pos Penerima", "Nip/NIK", "No VA", "Norek ", "Norek", "ID Pelanggan"
                         ];
 
                         if (textColumns.includes(headerName)) {
