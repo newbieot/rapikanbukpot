@@ -4,41 +4,165 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alat Perapih Data - PosIND by Ikhsan Radiansyah</title>
+    <!-- Library Pembaca CSV -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- Library Pembuat Excel & Pembaca XLSX -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; }
-        .main-content { flex: 1; padding: 40px 20px; }
-        .container { max-width: 950px; margin: 0 auto; background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); border-top: 6px solid #1C2D5A; }
-        .logo-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #f1f3f5; }
+        /* STRUKTUR UTAMA AGAR FOOTER SELALU DI BAWAH */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f4f7f6; 
+            color: #333; 
+            margin: 0; 
+            padding: 0; 
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 40px 20px;
+        }
+
+        .container { 
+            max-width: 950px; 
+            margin: 0 auto; 
+            background: #fff; 
+            padding: 40px; 
+            border-radius: 12px; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1); 
+            border-top: 6px solid #1C2D5A; 
+        }
+        
+        .logo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f1f3f5;
+        }
         .logo-danantara { height: 50px; width: auto; object-fit: contain; }
         .logo-posind { height: 42px; width: auto; object-fit: contain; }
+
         h2 { color: #1C2D5A; margin-top: 0; text-align: center; }
         .accent { color: #EF4123; }
         p.subtitle { text-align: center; color: #666; margin-bottom: 30px; }
 
-        .tab-container { display: flex; flex-wrap: wrap; gap: 5px; background-color: #f1f3f5; padding: 6px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #e2e8f0; }
-        .tab-btn { flex: 1; min-width: 180px; text-align: center; padding: 12px 10px; font-size: 13.5px; font-weight: bold; color: #555; cursor: pointer; border-radius: 6px; transition: all 0.25s ease-in-out; border: none; background: none; }
+        /* TAB UI & UX STYLE */
+        .tab-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            background-color: #f1f3f5;
+            padding: 6px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border: 1px solid #e2e8f0;
+        }
+        .tab-btn {
+            flex: 1;
+            min-width: 180px;
+            text-align: center;
+            padding: 12px 10px;
+            font-size: 13.5px;
+            font-weight: bold;
+            color: #555;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.25s ease-in-out;
+            user-select: none;
+            border: none;
+            background: none;
+        }
         .tab-btn:hover { color: #1C2D5A; background-color: #e2e8f0; }
-        .tab-btn.active { background-color: #1C2D5A; color: #ffffff; box-shadow: 0 4px 6px rgba(28, 45, 90, 0.2); }
+        .tab-btn.active {
+            background-color: #1C2D5A; 
+            color: #ffffff;
+            box-shadow: 0 4px 6px rgba(28, 45, 90, 0.2);
+        }
         
-        .upload-area { border: 2px dashed #cbd5e1; padding: 40px 20px; text-align: center; border-radius: 8px; margin-bottom: 15px; background-color: #fafafa; transition: all 0.3s ease; cursor: pointer; }
+        /* Area Upload */
+        .upload-area { 
+            border: 2px dashed #cbd5e1; 
+            padding: 40px 20px; 
+            text-align: center; 
+            border-radius: 8px; 
+            margin-bottom: 15px; 
+            background-color: #fafafa; 
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
         .upload-area:hover { border-color: #1C2D5A; background-color: #f8fafc; }
-        .upload-area.dragover { background-color: #e0e7ff; border-color: #EF4123; transform: scale(1.015); }
+        .upload-area.dragover {
+            background-color: #e0e7ff;
+            border-color: #EF4123;
+            transform: scale(1.015);
+        }
         input[type="file"] { display: none; }
         
-        .upload-label-btn { background-color: #fff; border: 2px solid #1C2D5A; color: #1C2D5A; padding: 10px 24px; border-radius: 6px; font-weight: bold; display: inline-block; margin-bottom: 12px; transition: all 0.2s; }
+        .upload-label-btn {
+            background-color: #fff;
+            border: 2px solid #1C2D5A;
+            color: #1C2D5A;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
         .upload-area:hover .upload-label-btn { background-color: #1C2D5A; color: #fff; }
 
-        .file-list-container { margin-bottom: 25px; display: flex; flex-direction: column; gap: 8px; }
-        .file-item { display: flex; justify-content: space-between; align-items: center; background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 10px 15px; border-radius: 6px; font-size: 14px; color: #334155; transition: all 0.2s; }
+        /* LIST DAFTAR FILE */
+        .file-list-container {
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #334155;
+            transition: all 0.2s;
+        }
         .file-item:hover { background-color: #f1f5f9; border-color: #cbd5e1; }
         .file-name { display: flex; align-items: center; gap: 8px; word-break: break-all; }
-        .file-remove-btn { background-color: #fee2e2; color: #ef4444; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer; font-weight: bold; font-size: 12px; transition: all 0.2s; }
+        .file-remove-btn {
+            background-color: #fee2e2;
+            color: #ef4444;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
         .file-remove-btn:hover { background-color: #ef4444; color: #fff; }
         
+        /* Tombol Aksi */
         .btn-group { display: flex; justify-content: center; gap: 15px; }
-        button.action-btn { background-color: #EF4123; color: white; border: none; padding: 14px 32px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; transition: background 0.3s, transform 0.1s; }
+        button.action-btn { 
+            background-color: #EF4123; 
+            color: white; 
+            border: none; 
+            padding: 14px 32px; 
+            font-size: 16px; 
+            font-weight: bold;
+            border-radius: 6px; 
+            cursor: pointer; 
+            transition: background 0.3s, transform 0.1s; 
+        }
         button.action-btn:hover { background-color: #d1371c; }
         button.action-btn:active { transform: scale(0.98); }
         button.action-btn:disabled { background-color: #ccc; cursor: not-allowed; }
@@ -50,14 +174,32 @@
         .note { font-size: 13px; color: #7f8c8d; margin-top: 10px; }
         #fileCount { font-weight: bold; color: #EF4123; margin-top: 15px; display: block; font-size: 15px; }
 
-        .dashboard-footer { width: 100%; box-sizing: border-box; background-color: #0f172a; border-top: 3px solid #EF4123; display: flex; justify-content: space-between; align-items: center; padding: 0 24px; margin-top: auto; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; z-index: 20; height: 60px; overflow: hidden; }
+        /* DASHBOARD FOOTER */
+        .dashboard-footer {
+            width: 100%;
+            box-sizing: border-box;
+            background-color: #0f172a;
+            border-top: 3px solid #EF4123;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 24px;
+            margin-top: auto;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            z-index: 20;
+            height: 60px;
+            overflow: hidden;
+        }
         .footer-brand { display: flex; align-items: center; gap: 8px; color: #f8fafc; font-weight: 700; font-size: 0.95rem; letter-spacing: 0.5px; white-space: nowrap; }
         .footer-desc { color: #94a3b8; font-size: 0.8rem; margin: 0 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; flex: 1; }
         .footer-creator-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(239, 65, 35, 0.1); border: 1px solid rgba(239, 65, 35, 0.2); padding: 5px 14px; border-radius: 20px; color: #e2e8f0; font-size: 0.75rem; white-space: nowrap; transition: all 0.3s ease; }
         .footer-creator-badge:hover { background: rgba(239, 65, 35, 0.2); border-color: rgba(239, 65, 35, 0.5); }
         .footer-creator-badge strong { color: #EF4123; font-weight: 600; }
 
-        @media (max-width: 850px) { .dashboard-footer { flex-direction: column; justify-content: center; gap: 8px; padding: 15px; height: auto; } .footer-desc { display: none; } }
+        @media (max-width: 850px) {
+            .dashboard-footer { flex-direction: column; justify-content: center; gap: 8px; padding: 15px; height: auto; }
+            .footer-desc { display: none; }
+        }
     </style>
 </head>
 <body>
@@ -133,9 +275,7 @@
 
     dropZone.addEventListener('drop', e => {
         dropZone.classList.remove('dragover');
-        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-            handleNewFiles(e.dataTransfer.files);
-        }
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) handleNewFiles(e.dataTransfer.files);
     }, false);
 
     fileInput.addEventListener('change', (e) => {
@@ -250,7 +390,6 @@
                     const buffer = await readFileAsArrayBuffer(file);
                     const workbook = XLSX.read(buffer, { type: 'array' });
                     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    // Ambil array mentah, pastikan header terambil di baris yang tepat
                     const dataArray = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: "" });
                     
                     if (fileTypeGlobal === 'pranpp') finalData = finalData.concat(processPranppArray(dataArray));
@@ -353,7 +492,7 @@
         return formatted;
     }
 
-    // --- LOGIKA MILE APP (POD) ---
+    // --- LOGIKA MILE APP ---
     function processMileApp(rawText) {
         let parsed = Papa.parse(rawText, { header: true, skipEmptyLines: true, delimiter: ";" });
         let formatted = [];
@@ -382,8 +521,7 @@
         let headerIdx = -1;
         for (let i = 0; i < Math.min(10, dataArray.length); i++) {
             if (dataArray[i].includes("Nomor Resi") || dataArray[i].includes("Kantor Asal")) { 
-                headerIdx = i; 
-                break; 
+                headerIdx = i; break; 
             }
         }
         if (headerIdx === -1) return [];
@@ -394,12 +532,10 @@
         for (let i = headerIdx + 1; i < dataArray.length; i++) {
             let row = dataArray[i];
             if (!row || row.length < 3 || !row[1]) continue; 
-            
             let cleanRow = {};
             for (let c = 0; c < headers.length; c++) {
                 let colName = headers[c] || `Column_${c}`;
-                let val = row[c] !== undefined ? row[c] : "";
-                cleanRow[colName] = val;
+                cleanRow[colName] = row[c] !== undefined ? row[c] : "";
             }
 
             if (cleanRow["Bea Dasar"] !== undefined) cleanRow["Bea Dasar"] = cleanRupiah(cleanRow["Bea Dasar"]);
@@ -412,7 +548,6 @@
             for (let tc of textCols) {
                 if (cleanRow[tc] !== undefined) cleanRow[tc] = String(cleanRow[tc]).replace(/\.0$/, "");
             }
-            
             if (cleanRow["Nama Pengirim"] !== undefined) cleanRow["Nama Pengirim"] = formatTeksRapi(cleanRow["Nama Pengirim"]);
             if (cleanRow["Nama Penerima"] !== undefined) cleanRow["Nama Penerima"] = formatTeksRapi(cleanRow["Nama Penerima"]);
             if (cleanRow["Kota Penerima"] !== undefined) cleanRow["Kota Penerima"] = formatTeksRapi(cleanRow["Kota Penerima"]);
@@ -424,79 +559,110 @@
         return formatted;
     }
 
-    // --- LOGIKA WEB PRANPP (BARU - DINAMIS & ANTI-ERROR) ---
+    // --- LOGIKA PENCARI NAMA KOLOM ANTI-ERROR (PENTING) ---
+    function findKey(obj, searchKey) {
+        // Hapus semua spasi dan tanda tambah/dan agar pencocokan 100% akurat
+        let target = searchKey.toUpperCase().replace(/[\s\+]/g, '').replace('DAN', '');
+        for (let k in obj) {
+            let cleanK = String(k).toUpperCase().replace(/[\s\+]/g, '').replace('DAN', '');
+            if (cleanK === target) return obj[k];
+        }
+        return undefined; // Jika kolom benar-benar tidak ada di file
+    }
+
+    // --- LOGIKA WEB PRANPP (DIPERBARUI) ---
     function cleanRupiah(val) {
         if (val === undefined || val === null || val === "") return 0;
         if (typeof val === 'number') return val; 
+        
         let strVal = String(val).trim();
-        if (strVal.match(/Rp/i)) {
-            strVal = strVal.replace(/Rp/gi, '').replace(/\./g, '').replace(/ /g, '');
-            strVal = strVal.replace(/,/g, '.'); 
-            return parseFloat(strVal) || 0;
-        } 
-        if (!strVal.includes('.') && !strVal.includes(',')) {
-            let num = parseFloat(strVal);
-            if (num > 0 && num < 1000) return num * 1000;
-            return num || 0;
-        }
-        if (strVal.includes('.') && !strVal.includes(',')) {
-            let parts = strVal.split('.');
-            if (parts.length === 2) {
-                let left = parts[0];
-                let right = parts[1];
-                if (right.length === 1) return parseFloat(left + right + "00");
-                if (right.length === 2) return parseFloat(left + right + "0");
-                if (right.length === 3) return parseFloat(strVal.replace('.', ''));
+        if (strVal === "-" || strVal === "0") return 0;
+
+        // Buang simbol Rp dan Spasi
+        strVal = strVal.replace(/Rp/gi, '').replace(/ /g, '');
+        
+        // Logika Rupiah Indonesia (cth: 1.000.000,50)
+        if (strVal.includes('.') && strVal.includes(',')) {
+            let dotIndex = strVal.lastIndexOf('.');
+            let commaIndex = strVal.lastIndexOf(',');
+            if (dotIndex < commaIndex) { 
+                strVal = strVal.replace(/\./g, '').replace(',', '.');
+            } else { 
+                strVal = strVal.replace(/,/g, '');
             }
+            return parseFloat(strVal) || 0;
         }
-        strVal = strVal.replace(/\./g, '');
-        return parseFloat(strVal.replace(/,/g, '.')) || 0;
+
+        if (strVal.includes('.')) {
+            let parts = strVal.split('.');
+            if (parts.length > 2) return parseFloat(strVal.replace(/\./g, '')) || 0;
+            let right = parts[1];
+            if (right.length === 3) return parseFloat(strVal.replace(/\./g, '')) || 0;
+            if (right.length === 1) return parseFloat(parts[0] + right + "00") || 0;
+            if (right.length === 2) return parseFloat(parts[0] + right + "0") || 0;
+        }
+        
+        if (strVal.includes(',')) {
+            let parts = strVal.split(',');
+            if (parts.length > 2) return parseFloat(strVal.replace(/,/g, '')) || 0;
+            let right = parts[1];
+            if (right.length === 3) return parseFloat(strVal.replace(/,/g, '')) || 0;
+            return parseFloat(strVal.replace(',', '.')) || 0;
+        }
+        
+        let num = parseFloat(strVal);
+        // Tangani kasus sistem PRANPP memotong nol (cth "300" tapi aslinya 300.000)
+        if (num > 0 && num < 1000 && !strVal.includes('.') && !strVal.includes(',')) {
+             return num * 1000;
+        }
+        return num || 0;
     }
 
     function processPranppArray(dataArray) {
         if (dataArray.length < 2) return [];
         
         let headerIdx = -1;
-        // Cari otomatis letak baris header (Menghilangkan tulisan Daftar Dokumen dll di baris paling atas)
-        for(let i=0; i < Math.min(10, dataArray.length); i++) {
-            if (dataArray[i].includes("Nomor Dokumen")) { headerIdx = i; break; }
+        // Cari otomatis posisi baris header (Menghilangkan tulisan aneh di bagian atas)
+        for(let i=0; i < Math.min(15, dataArray.length); i++) {
+            let rowStr = dataArray[i].join("").toUpperCase().replace(/\s/g, '');
+            if (rowStr.includes("NOMORDOKUMEN")) { headerIdx = i; break; }
         }
         if (headerIdx === -1) return [];
 
         let headers = dataArray[headerIdx];
         let formatted = [];
 
-        // Baca data secara dinamis mengikuti nama Header
         for(let i = headerIdx + 1; i < dataArray.length; i++) {
             let row = dataArray[i];
-            // Filter agar baris kosong tidak ikut terproses
-            if (!row || row.length < 2 || !row[0] && !row[1]) continue; 
+            if (!row || row.length < 2) continue; 
             
             let tempRow = {};
             for (let c = 0; c < headers.length; c++) {
-                let colName = headers[c] ? headers[c].trim() : `Column_${c}`;
+                let colName = headers[c] ? String(headers[c]) : `Column_${c}`;
                 tempRow[colName] = row[c] !== undefined ? row[c] : "";
             }
 
-            // Membangun baris akhir, Jika ada kolom yang tidak ada di file excelnya, set jadi kosong (agar tidak error undefinded)
+            let noDok = findKey(tempRow, "Nomor Dokumen");
+            if (!noDok) continue; // Skip jika tidak ada nomor dokumen
+
             let cleanRow = {
-                "No": parseInt(tempRow["No"]) || 0,
-                "Nomor Dokumen": String(tempRow["Nomor Dokumen"] || "").trim(),
-                "Masa Laku": tempRow["Masa Laku"] || "",
-                "Dokumen": tempRow["Dokumen"] || "",
-                "Tanggal Transaksi": tempRow["Tanggal Transaksi"] || "",
-                "Jenis Biaya": tempRow["Jenis Biaya"] || "",
-                "Status Dokumen": tempRow["Status Dokumen"] || "",
-                "Pemilik Anggaran": tempRow["Pemilik Anggaran"] || "",
-                "BSU": cleanRupiah(tempRow["BSU"]),
-                "Keterangan": tempRow["Keterangan"] || "",
-                "BSU Pajak": cleanRupiah(tempRow["BSU Pajak"]),
-                "Total": cleanRupiah(tempRow["Total"]),
-                "Pajak": cleanRupiah(tempRow["Pajak"]),
-                "Total BSU": cleanRupiah(tempRow["Total BSU"]),
-                "Total Pajak": cleanRupiah(tempRow["Total Pajak"]),
-                "Total BSU+Pajak": cleanRupiah(tempRow["Total BSU+Pajak"]),
-                "Nomor Internal Order": String(tempRow["Nomor Internal Order"] || "").trim() 
+                "No": parseInt(findKey(tempRow, "No")) || 0,
+                "Nomor Dokumen": String(noDok).trim(),
+                "Masa Laku": findKey(tempRow, "Masa Laku") || "",
+                "Dokumen": findKey(tempRow, "Dokumen") || "",
+                "Tanggal Transaksi": findKey(tempRow, "Tanggal Transaksi") || "",
+                "Jenis Biaya": findKey(tempRow, "Jenis Biaya") || "",
+                "Status Dokumen": findKey(tempRow, "Status Dokumen") || "",
+                "Pemilik Anggaran": findKey(tempRow, "Pemilik Anggaran") || "",
+                "BSU": cleanRupiah(findKey(tempRow, "BSU")),
+                "Keterangan": findKey(tempRow, "Keterangan") || "",
+                "BSU Pajak": cleanRupiah(findKey(tempRow, "BSU Pajak")),
+                "Total": cleanRupiah(findKey(tempRow, "Total")),
+                "Pajak": cleanRupiah(findKey(tempRow, "Pajak")),
+                "Total BSU": cleanRupiah(findKey(tempRow, "Total BSU")),
+                "Total Pajak": cleanRupiah(findKey(tempRow, "Total Pajak")),
+                "Total BSU+Pajak": cleanRupiah(findKey(tempRow, "Total BSU+Pajak")),
+                "Nomor Internal Order": String(findKey(tempRow, "Nomor Internal Order") || "").trim() 
             };
             formatted.push(cleanRow);
         }
@@ -505,31 +671,33 @@
 
     function processPranppCsv(rawText) {
         let lines = rawText.split('\n');
-        while (lines.length > 0 && !lines[0].includes('Nomor Dokumen')) lines.shift(); 
-        
+        while (lines.length > 0 && !lines[0].toUpperCase().replace(/\s/g, '').includes('NOMORDOKUMEN')) {
+            lines.shift(); 
+        }
         let parsed = Papa.parse(lines.join('\n'), { header: true, skipEmptyLines: true });
         let formatted = [];
         parsed.data.forEach(row => {
-            if (!row["No"] || row["No"].trim() === "") return;
+            let noDok = findKey(row, "Nomor Dokumen");
+            if (!noDok) return;
             
             let cleanRow = {
-                "No": parseInt(row["No"]) || 0,
-                "Nomor Dokumen": String(row["Nomor Dokumen"] || "").trim(),
-                "Masa Laku": row["Masa Laku"] || "",
-                "Dokumen": row["Dokumen"] || "",
-                "Tanggal Transaksi": row["Tanggal Transaksi"] || "",
-                "Jenis Biaya": row["Jenis Biaya"] || "",
-                "Status Dokumen": row["Status Dokumen"] || "",
-                "Pemilik Anggaran": row["Pemilik Anggaran"] || "",
-                "BSU": cleanRupiah(row["BSU"]),
-                "Keterangan": row["Keterangan"] || "",
-                "BSU Pajak": cleanRupiah(row["BSU Pajak"]),
-                "Total": cleanRupiah(row["Total"]),
-                "Pajak": cleanRupiah(row["Pajak"]),
-                "Total BSU": cleanRupiah(row["Total BSU"]),
-                "Total Pajak": cleanRupiah(row["Total Pajak"]),
-                "Total BSU+Pajak": cleanRupiah(row["Total BSU+Pajak"]),
-                "Nomor Internal Order": String(row["Nomor Internal Order"] || "").trim()
+                "No": parseInt(findKey(row, "No")) || 0,
+                "Nomor Dokumen": String(noDok).trim(),
+                "Masa Laku": findKey(row, "Masa Laku") || "",
+                "Dokumen": findKey(row, "Dokumen") || "",
+                "Tanggal Transaksi": findKey(row, "Tanggal Transaksi") || "",
+                "Jenis Biaya": findKey(row, "Jenis Biaya") || "",
+                "Status Dokumen": findKey(row, "Status Dokumen") || "",
+                "Pemilik Anggaran": findKey(row, "Pemilik Anggaran") || "",
+                "BSU": cleanRupiah(findKey(row, "BSU")),
+                "Keterangan": findKey(row, "Keterangan") || "",
+                "BSU Pajak": cleanRupiah(findKey(row, "BSU Pajak")),
+                "Total": cleanRupiah(findKey(row, "Total")),
+                "Pajak": cleanRupiah(findKey(row, "Pajak")),
+                "Total BSU": cleanRupiah(findKey(row, "Total BSU")),
+                "Total Pajak": cleanRupiah(findKey(row, "Total Pajak")),
+                "Total BSU+Pajak": cleanRupiah(findKey(row, "Total BSU+Pajak")),
+                "Nomor Internal Order": String(findKey(row, "Nomor Internal Order") || "").trim()
             };
             formatted.push(cleanRow);
         });
@@ -605,6 +773,7 @@
                             }
                         };
                         
+                        // DAFTAR KOLOM YANG HARUS DIKUNCI SEBAGAI TEKS (TIDAK ADA SEPARATOR)
                         const textColumns = [
                             "Nomor Internal Order", "Nomor Dokumen", "No Resi", "Nomor Resi", "No HP", 
                             "Tlp Pengirim", "Tlp Penerima", "Kodepos Tujuan", "Virtual Account", 
@@ -621,6 +790,7 @@
                             if (headerName === "No" || headerName === "Berat") {
                                 ws[cellRef].s.alignment.horizontal = "center";
                             } else {
+                                // INI ADALAH LOGIKA AGAR ANGKA OTOMATIS BERFORMAT RIBUAN DI EXCEL
                                 let isDecimal = ws[cellRef].v % 1 !== 0;
                                 let fPattern = isDecimal ? "#,##0.00" : "#,##0";
                                 ws[cellRef].z = fPattern; 
