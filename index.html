@@ -21,10 +21,7 @@
             min-height: 100vh;
         }
         
-        .main-content {
-            flex: 1;
-            padding: 40px 20px;
-        }
+        .main-content { flex: 1; padding: 40px 20px; }
 
         .container { 
             max-width: 950px; 
@@ -37,12 +34,8 @@
         }
         
         .logo-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #f1f3f5;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #f1f3f5;
         }
         .logo-danantara { height: 50px; width: auto; object-fit: contain; }
         .logo-posind { height: 42px; width: auto; object-fit: contain; }
@@ -53,114 +46,56 @@
 
         /* TAB UI & UX STYLE */
         .tab-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            background-color: #f1f3f5;
-            padding: 6px;
-            border-radius: 8px;
-            margin-bottom: 25px;
-            border: 1px solid #e2e8f0;
+            display: flex; flex-wrap: wrap; gap: 5px; background-color: #f1f3f5;
+            padding: 6px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #e2e8f0;
         }
         .tab-btn {
-            flex: 1;
-            min-width: 180px;
-            text-align: center;
-            padding: 12px 10px;
-            font-size: 13.5px;
-            font-weight: bold;
-            color: #555;
-            cursor: pointer;
-            border-radius: 6px;
-            transition: all 0.25s ease-in-out;
-            user-select: none;
-            border: none;
-            background: none;
+            flex: 1; min-width: 180px; text-align: center; padding: 12px 10px;
+            font-size: 13.5px; font-weight: bold; color: #555; cursor: pointer;
+            border-radius: 6px; transition: all 0.25s ease-in-out; border: none; background: none;
         }
         .tab-btn:hover { color: #1C2D5A; background-color: #e2e8f0; }
         .tab-btn.active {
-            background-color: #1C2D5A; 
-            color: #ffffff;
-            box-shadow: 0 4px 6px rgba(28, 45, 90, 0.2);
+            background-color: #1C2D5A; color: #ffffff; box-shadow: 0 4px 6px rgba(28, 45, 90, 0.2);
         }
         
         /* Area Upload */
         .upload-area { 
-            border: 2px dashed #cbd5e1; 
-            padding: 40px 20px; 
-            text-align: center; 
-            border-radius: 8px; 
-            margin-bottom: 15px; 
-            background-color: #fafafa; 
-            transition: all 0.3s ease;
-            cursor: pointer;
+            border: 2px dashed #cbd5e1; padding: 40px 20px; text-align: center; 
+            border-radius: 8px; margin-bottom: 15px; background-color: #fafafa; 
+            transition: all 0.3s ease; cursor: pointer;
         }
         .upload-area:hover { border-color: #1C2D5A; background-color: #f8fafc; }
-        .upload-area.dragover {
-            background-color: #e0e7ff;
-            border-color: #EF4123;
-            transform: scale(1.015);
-        }
+        .upload-area.dragover { background-color: #e0e7ff; border-color: #EF4123; transform: scale(1.015); }
         input[type="file"] { display: none; }
         
         .upload-label-btn {
-            background-color: #fff;
-            border: 2px solid #1C2D5A;
-            color: #1C2D5A;
-            padding: 10px 24px;
-            border-radius: 6px;
-            font-weight: bold;
-            display: inline-block;
-            margin-bottom: 12px;
-            transition: all 0.2s;
+            background-color: #fff; border: 2px solid #1C2D5A; color: #1C2D5A;
+            padding: 10px 24px; border-radius: 6px; font-weight: bold; display: inline-block;
+            margin-bottom: 12px; transition: all 0.2s;
         }
         .upload-area:hover .upload-label-btn { background-color: #1C2D5A; color: #fff; }
 
         /* LIST DAFTAR FILE */
-        .file-list-container {
-            margin-bottom: 25px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
+        .file-list-container { margin-bottom: 25px; display: flex; flex-direction: column; gap: 8px; }
         .file-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            padding: 10px 15px;
-            border-radius: 6px;
-            font-size: 14px;
-            color: #334155;
-            transition: all 0.2s;
+            display: flex; justify-content: space-between; align-items: center;
+            background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 10px 15px;
+            border-radius: 6px; font-size: 14px; color: #334155; transition: all 0.2s;
         }
         .file-item:hover { background-color: #f1f5f9; border-color: #cbd5e1; }
         .file-name { display: flex; align-items: center; gap: 8px; word-break: break-all; }
         .file-remove-btn {
-            background-color: #fee2e2;
-            color: #ef4444;
-            border: none;
-            border-radius: 4px;
-            padding: 5px 10px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 12px;
-            transition: all 0.2s;
+            background-color: #fee2e2; color: #ef4444; border: none; border-radius: 4px;
+            padding: 5px 10px; cursor: pointer; font-weight: bold; font-size: 12px; transition: all 0.2s;
         }
         .file-remove-btn:hover { background-color: #ef4444; color: #fff; }
         
         /* Tombol Aksi */
         .btn-group { display: flex; justify-content: center; gap: 15px; }
         button.action-btn { 
-            background-color: #EF4123; 
-            color: white; 
-            border: none; 
-            padding: 14px 32px; 
-            font-size: 16px; 
-            font-weight: bold;
-            border-radius: 6px; 
-            cursor: pointer; 
+            background-color: #EF4123; color: white; border: none; padding: 14px 32px; 
+            font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; 
             transition: background 0.3s, transform 0.1s; 
         }
         button.action-btn:hover { background-color: #d1371c; }
@@ -176,23 +111,19 @@
 
         /* DASHBOARD FOOTER */
         .dashboard-footer {
-            width: 100%;
-            box-sizing: border-box;
-            background-color: #0f172a;
-            border-top: 3px solid #EF4123;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 24px;
-            margin-top: auto;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            z-index: 20;
-            height: 60px;
-            overflow: hidden;
+            width: 100%; box-sizing: border-box; background-color: #0f172a;
+            border-top: 3px solid #EF4123; display: flex; justify-content: space-between;
+            align-items: center; padding: 0 24px; margin-top: auto;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; z-index: 20;
+            height: 60px; overflow: hidden;
         }
-        .footer-brand { display: flex; align-items: center; gap: 8px; color: #f8fafc; font-weight: 700; font-size: 0.95rem; letter-spacing: 0.5px; white-space: nowrap; }
+        .footer-brand { display: flex; align-items: center; gap: 8px; color: #f8fafc; font-weight: 700; font-size: 0.95rem; }
         .footer-desc { color: #94a3b8; font-size: 0.8rem; margin: 0 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; flex: 1; }
-        .footer-creator-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(239, 65, 35, 0.1); border: 1px solid rgba(239, 65, 35, 0.2); padding: 5px 14px; border-radius: 20px; color: #e2e8f0; font-size: 0.75rem; white-space: nowrap; transition: all 0.3s ease; }
+        .footer-creator-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(239, 65, 35, 0.1); border: 1px solid rgba(239, 65, 35, 0.2);
+            padding: 5px 14px; border-radius: 20px; color: #e2e8f0; font-size: 0.75rem; transition: all 0.3s ease;
+        }
         .footer-creator-badge:hover { background: rgba(239, 65, 35, 0.2); border-color: rgba(239, 65, 35, 0.5); }
         .footer-creator-badge strong { color: #EF4123; font-weight: 600; }
 
@@ -347,6 +278,27 @@
         return upperText;
     }
 
+    // --- FUNGSI TANGGAL ANTI-CRASH UNTUK EXCEL SERIAL DATE ---
+    function parseDmyDate(dateStr) {
+        if (dateStr === undefined || dateStr === null || dateStr === "") return 0;
+        
+        // 🌟 FIX ERROR CRASH: Tangani jika tanggal terbaca sebagai Angka Seri Excel (contoh: 46218)
+        if (typeof dateStr === 'number') {
+            return (dateStr - 25569) * 86400 * 1000;
+        }
+
+        let str = String(dateStr).trim();
+        let parts = str.split(' ');
+        let dmy = parts[0].split(/[-/]/);
+        if (dmy.length === 3) {
+            let year = dmy[2].length === 4 ? dmy[2] : (dmy[0].length === 4 ? dmy[0] : "20" + dmy[2]);
+            let month = dmy[1];
+            let day = dmy[0].length <= 2 ? dmy[0] : dmy[2];
+            return new Date(`${year}-${month}-${day}T${parts[1] || '00:00:00'}`).getTime();
+        }
+        return 0;
+    }
+
     async function processFiles() {
         const statusDiv = document.getElementById('status');
         const processBtn = document.getElementById('processBtn');
@@ -405,7 +357,7 @@
             }
 
             if (fileTypeGlobal === 'bukpot') {
-                finalData.sort((a, b) => new Date(a['Tanggal Bukti Potong']) - new Date(b['Tanggal Bukti Potong']));
+                finalData.sort((a, b) => parseDmyDate(a['Tanggal Bukti Potong']) - parseDmyDate(b['Tanggal Bukti Potong']));
             } else if (fileTypeGlobal === 'mileapp') {
                 finalData.sort((a, b) => parseDmyDate(a['Tgl Kirim']) - parseDmyDate(b['Tgl Kirim']));
             } else if (fileTypeGlobal === 'pranpp') {
@@ -446,14 +398,6 @@
         });
     }
 
-    function parseDmyDate(dateStr) {
-        if (!dateStr) return 0;
-        let parts = dateStr.split(' ');
-        let dmy = parts[0].split('-');
-        if (dmy.length === 3) return new Date(`${dmy[2]}-${dmy[1]}-${dmy[0]}T${parts[1] || '00:00:00'}`).getTime();
-        return 0;
-    }
-
     // --- LOGIKA BUKTI POTONG ---
     function processBukpot(rawText) {
         let lines = rawText.split('\n');
@@ -492,7 +436,7 @@
         return formatted;
     }
 
-    // --- LOGIKA MILE APP ---
+    // --- LOGIKA MILE APP (POD) ---
     function processMileApp(rawText) {
         let parsed = Papa.parse(rawText, { header: true, skipEmptyLines: true, delimiter: ";" });
         let formatted = [];
@@ -560,17 +504,17 @@
     }
 
     // --- LOGIKA PENCARI NAMA KOLOM ANTI-ERROR (PENTING) ---
+    // Mencari kunci yang tepat meskipun ada spasi nyasar, huruf besar kecil, atau kata "DAN" (contoh: "Total BSU+Pajak" vs "Total BSU dan Pajak")
     function findKey(obj, searchKey) {
-        // Hapus semua spasi dan tanda tambah/dan agar pencocokan 100% akurat
         let target = searchKey.toUpperCase().replace(/[\s\+]/g, '').replace('DAN', '');
         for (let k in obj) {
             let cleanK = String(k).toUpperCase().replace(/[\s\+]/g, '').replace('DAN', '');
             if (cleanK === target) return obj[k];
         }
-        return undefined; // Jika kolom benar-benar tidak ada di file
+        return undefined;
     }
 
-    // --- LOGIKA WEB PRANPP (DIPERBARUI) ---
+    // --- LOGIKA WEB PRANPP (BARU - SMART FINDER) ---
     function cleanRupiah(val) {
         if (val === undefined || val === null || val === "") return 0;
         if (typeof val === 'number') return val; 
@@ -578,10 +522,8 @@
         let strVal = String(val).trim();
         if (strVal === "-" || strVal === "0") return 0;
 
-        // Buang simbol Rp dan Spasi
         strVal = strVal.replace(/Rp/gi, '').replace(/ /g, '');
         
-        // Logika Rupiah Indonesia (cth: 1.000.000,50)
         if (strVal.includes('.') && strVal.includes(',')) {
             let dotIndex = strVal.lastIndexOf('.');
             let commaIndex = strVal.lastIndexOf(',');
@@ -611,7 +553,7 @@
         }
         
         let num = parseFloat(strVal);
-        // Tangani kasus sistem PRANPP memotong nol (cth "300" tapi aslinya 300.000)
+        // Tangani kasus PRANPP memotong nol (cth "300" -> 300.000)
         if (num > 0 && num < 1000 && !strVal.includes('.') && !strVal.includes(',')) {
              return num * 1000;
         }
@@ -622,7 +564,7 @@
         if (dataArray.length < 2) return [];
         
         let headerIdx = -1;
-        // Cari otomatis posisi baris header (Menghilangkan tulisan aneh di bagian atas)
+        // 🌟 Cari posisi baris header secara dinamis (mengabaikan sel kosong di atasnya)
         for(let i=0; i < Math.min(15, dataArray.length); i++) {
             let rowStr = dataArray[i].join("").toUpperCase().replace(/\s/g, '');
             if (rowStr.includes("NOMORDOKUMEN")) { headerIdx = i; break; }
@@ -638,13 +580,16 @@
             
             let tempRow = {};
             for (let c = 0; c < headers.length; c++) {
-                let colName = headers[c] ? String(headers[c]) : `Column_${c}`;
-                tempRow[colName] = row[c] !== undefined ? row[c] : "";
+                if (headers[c]) {
+                    let colName = String(headers[c]).trim();
+                    tempRow[colName] = row[c] !== undefined ? row[c] : "";
+                }
             }
 
             let noDok = findKey(tempRow, "Nomor Dokumen");
-            if (!noDok) continue; // Skip jika tidak ada nomor dokumen
+            if (!noDok) continue; 
 
+            // 🌟 Tarik data dengan Smart Finder (Anti-Bergeser & Anti-Spasi-Kosong)
             let cleanRow = {
                 "No": parseInt(findKey(tempRow, "No")) || 0,
                 "Nomor Dokumen": String(noDok).trim(),
@@ -773,7 +718,6 @@
                             }
                         };
                         
-                        // DAFTAR KOLOM YANG HARUS DIKUNCI SEBAGAI TEKS (TIDAK ADA SEPARATOR)
                         const textColumns = [
                             "Nomor Internal Order", "Nomor Dokumen", "No Resi", "Nomor Resi", "No HP", 
                             "Tlp Pengirim", "Tlp Penerima", "Kodepos Tujuan", "Virtual Account", 
@@ -789,8 +733,15 @@
                         else if (ws[cellRef].t === 'n') {
                             if (headerName === "No" || headerName === "Berat") {
                                 ws[cellRef].s.alignment.horizontal = "center";
-                            } else {
-                                // INI ADALAH LOGIKA AGAR ANGKA OTOMATIS BERFORMAT RIBUAN DI EXCEL
+                            } 
+                            // 🌟 FIX ERROR FORMAT: Jangan pasang format Uang untuk Kolom Tanggal!
+                            else if (headerName.toLowerCase().includes("tanggal") || headerName.toLowerCase().includes("tgl") || headerName.toLowerCase().includes("masa")) {
+                                ws[cellRef].s.alignment.horizontal = "center";
+                                ws[cellRef].z = "dd-mm-yyyy"; 
+                                ws[cellRef].s.numFmt = "dd-mm-yyyy";
+                            } 
+                            else {
+                                // 🌟 Terapkan Format Rupiah (Titik Ribuan: 1.000.000)
                                 let isDecimal = ws[cellRef].v % 1 !== 0;
                                 let fPattern = isDecimal ? "#,##0.00" : "#,##0";
                                 ws[cellRef].z = fPattern; 
