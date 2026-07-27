@@ -38,3 +38,16 @@ Tanggal pengujian: 27 Juli 2026
 Browser integration dijalankan menggunakan Chromium headless. Karena sandbox pengujian memblokir akses jaringan browser ke CDN eksternal, Papa Parse dan xlsx-js-style digantikan dengan test double lokal selama automasi UI. Transformasi empat mode, state UI, validasi, nama workbook/sheet, dan alur download tetap dieksekusi. Pada deploy produksi, halaman menggunakan versi CDN yang sama dengan aplikasi lama: Papa Parse 5.4.1 dan xlsx-js-style 1.2.0.
 
 File contoh pengujian berada di luar repository final dan tidak disertakan dalam ZIP.
+
+## Regression test footer — 2026-07-27
+
+Footer baru diuji dengan Chromium pada viewport 1440×1000, 390×844, dan 320×700.
+
+- Tinggi footer desktop: 38 px.
+- Tinggi footer mobile: 36 px.
+- Caption tengah tampil pada desktop dan disembunyikan pada layar kecil.
+- Badge kreator tetap berada di dalam viewport pada lebar 390 px dan 320 px.
+- Tidak ada horizontal overflow (`scrollWidth` sama dengan `clientWidth`).
+- Tautan PosNew Hub mengarah ke `https://posnew.com`.
+- Tautan kreator mengarah ke `https://posnew.com/about-me.html`.
+- Tidak ditemukan page error saat pengujian struktur dan CSS footer.

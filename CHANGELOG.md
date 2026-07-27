@@ -1,3 +1,11 @@
+## 2026-07-27 — Penyesuaian footer
+
+### Diubah
+
+- Footer disamakan dengan pola visual `lacak.posnew.com`: bar gelap tipis 38 px, garis aksen oranye, identitas PosNew Hub, caption tengah, dan badge kreator.
+- Footer dibuat tetap ringkas dan responsif; caption disembunyikan pada layar kecil dan badge kreator dipadatkan tanpa menimbulkan horizontal overflow.
+- Tautan PosNew Hub dan profil kreator sekarang terbuka aman di tab baru.
+
 # Changelog
 
 ## 2026-07-27 — Redesign menyeluruh
