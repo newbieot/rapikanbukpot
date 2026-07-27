@@ -1,785 +1,282 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alat Perapih Data - PosIND by Ikhsan Radiansyah</title>
-    <!-- Library Pembaca CSV -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <!-- Library Pembuat Excel & Pembaca XLSX -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
-    <style>
-        /* STRUKTUR UTAMA AGAR FOOTER SELALU DI BAWAH */
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: #f4f7f6; 
-            color: #333; 
-            margin: 0; 
-            padding: 0; 
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-        
-        .main-content { flex: 1; padding: 40px 20px; }
-
-        .container { 
-            max-width: 950px; 
-            margin: 0 auto; 
-            background: #fff; 
-            padding: 40px; 
-            border-radius: 12px; 
-            box-shadow: 0 8px 24px rgba(0,0,0,0.1); 
-            border-top: 6px solid #1C2D5A; 
-        }
-        
-        .logo-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #f1f3f5;
-        }
-        .logo-danantara { height: 50px; width: auto; object-fit: contain; }
-        .logo-posind { height: 42px; width: auto; object-fit: contain; }
-
-        h2 { color: #1C2D5A; margin-top: 0; text-align: center; }
-        .accent { color: #EF4123; }
-        p.subtitle { text-align: center; color: #666; margin-bottom: 30px; }
-
-        /* TAB UI & UX STYLE */
-        .tab-container {
-            display: flex; flex-wrap: wrap; gap: 5px; background-color: #f1f3f5;
-            padding: 6px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #e2e8f0;
-        }
-        .tab-btn {
-            flex: 1; min-width: 180px; text-align: center; padding: 12px 10px;
-            font-size: 13.5px; font-weight: bold; color: #555; cursor: pointer;
-            border-radius: 6px; transition: all 0.25s ease-in-out; border: none; background: none;
-        }
-        .tab-btn:hover { color: #1C2D5A; background-color: #e2e8f0; }
-        .tab-btn.active {
-            background-color: #1C2D5A; color: #ffffff; box-shadow: 0 4px 6px rgba(28, 45, 90, 0.2);
-        }
-        
-        /* Area Upload */
-        .upload-area { 
-            border: 2px dashed #cbd5e1; padding: 40px 20px; text-align: center; 
-            border-radius: 8px; margin-bottom: 15px; background-color: #fafafa; 
-            transition: all 0.3s ease; cursor: pointer;
-        }
-        .upload-area:hover { border-color: #1C2D5A; background-color: #f8fafc; }
-        .upload-area.dragover { background-color: #e0e7ff; border-color: #EF4123; transform: scale(1.015); }
-        input[type="file"] { display: none; }
-        
-        .upload-label-btn {
-            background-color: #fff; border: 2px solid #1C2D5A; color: #1C2D5A;
-            padding: 10px 24px; border-radius: 6px; font-weight: bold; display: inline-block;
-            margin-bottom: 12px; transition: all 0.2s;
-        }
-        .upload-area:hover .upload-label-btn { background-color: #1C2D5A; color: #fff; }
-
-        /* LIST DAFTAR FILE */
-        .file-list-container { margin-bottom: 25px; display: flex; flex-direction: column; gap: 8px; }
-        .file-item {
-            display: flex; justify-content: space-between; align-items: center;
-            background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 10px 15px;
-            border-radius: 6px; font-size: 14px; color: #334155; transition: all 0.2s;
-        }
-        .file-item:hover { background-color: #f1f5f9; border-color: #cbd5e1; }
-        .file-name { display: flex; align-items: center; gap: 8px; word-break: break-all; }
-        .file-remove-btn {
-            background-color: #fee2e2; color: #ef4444; border: none; border-radius: 4px;
-            padding: 5px 10px; cursor: pointer; font-weight: bold; font-size: 12px; transition: all 0.2s;
-        }
-        .file-remove-btn:hover { background-color: #ef4444; color: #fff; }
-        
-        /* Tombol Aksi */
-        .btn-group { display: flex; justify-content: center; gap: 15px; }
-        button.action-btn { 
-            background-color: #EF4123; color: white; border: none; padding: 14px 32px; 
-            font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; 
-            transition: background 0.3s, transform 0.1s; 
-        }
-        button.action-btn:hover { background-color: #d1371c; }
-        button.action-btn:active { transform: scale(0.98); }
-        button.action-btn:disabled { background-color: #ccc; cursor: not-allowed; }
-        
-        #downloadBtn { background-color: #27ae60; }
-        #downloadBtn:hover { background-color: #219653; }
-        
-        #status { margin-top: 20px; font-weight: bold; color: #2c3e50; text-align: center; font-size: 15px; }
-        .note { font-size: 13px; color: #7f8c8d; margin-top: 10px; }
-        #fileCount { font-weight: bold; color: #EF4123; margin-top: 15px; display: block; font-size: 15px; }
-
-        /* DASHBOARD FOOTER */
-        .dashboard-footer {
-            width: 100%; box-sizing: border-box; background-color: #0f172a;
-            border-top: 3px solid #EF4123; display: flex; justify-content: space-between;
-            align-items: center; padding: 0 24px; margin-top: auto;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; z-index: 20;
-            height: 60px; overflow: hidden;
-        }
-        .footer-brand { display: flex; align-items: center; gap: 8px; color: #f8fafc; font-weight: 700; font-size: 0.95rem; }
-        .footer-desc { color: #94a3b8; font-size: 0.8rem; margin: 0 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; flex: 1; }
-        .footer-creator-badge {
-            display: inline-flex; align-items: center; gap: 6px;
-            background: rgba(239, 65, 35, 0.1); border: 1px solid rgba(239, 65, 35, 0.2);
-            padding: 5px 14px; border-radius: 20px; color: #e2e8f0; font-size: 0.75rem; transition: all 0.3s ease;
-        }
-        .footer-creator-badge:hover { background: rgba(239, 65, 35, 0.2); border-color: rgba(239, 65, 35, 0.5); }
-        .footer-creator-badge strong { color: #EF4123; font-weight: 600; }
-
-        @media (max-width: 850px) {
-            .dashboard-footer { flex-direction: column; justify-content: center; gap: 8px; padding: 15px; height: auto; }
-            .footer-desc { display: none; }
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#17264d">
+  <meta name="color-scheme" content="light">
+  <title>Clean PosNew – Rapikan Dokumen Bukti Potong</title>
+  <meta name="description" content="Rapikan dan gabungkan data Bukti Potong, Mile App, PRANPP, dan PID melalui workspace berbasis browser yang praktis dan mudah digunakan.">
+  <link rel="canonical" href="https://clean.posnew.com/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="id_ID">
+  <meta property="og:title" content="Clean PosNew – Rapikan Dokumen Bukti Potong">
+  <meta property="og:description" content="Workspace ringan untuk merapikan dan menggabungkan data dokumen operasional langsung di browser.">
+  <meta property="og:url" content="https://clean.posnew.com/">
+  <meta property="og:image" content="https://clean.posnew.com/assets/images/og-clean-posnew.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Clean PosNew – Rapikan Dokumen Bukti Potong">
+  <meta name="twitter:description" content="Workspace ringan untuk merapikan dan menggabungkan data dokumen operasional langsung di browser.">
+  <meta name="twitter:image" content="https://clean.posnew.com/assets/images/og-clean-posnew.png">
+  <link rel="icon" href="/favicon-rapikanbukpot.png" sizes="48x48" type="image/png">
+  <link rel="icon" href="/assets/icons/app-icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png" sizes="180x180">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="stylesheet" href="/assets/css/app.css?v=20260727">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Clean PosNew",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Any",
+    "url": "https://clean.posnew.com/",
+    "description": "Alat bantu berbasis browser untuk merapikan dan menggabungkan data Bukti Potong, Mile App, PRANPP, dan PID.",
+    "offers": {"@type": "Offer", "price": "0", "priceCurrency": "IDR"}
+  }
+  </script>
 </head>
 <body>
+  <a class="skip-link" href="#workspace">Lewati ke workspace</a>
 
-<div class="main-content">
-    <div class="container">
-        <div class="logo-header">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Danantara_Indonesia.svg/1280px-Danantara_Indonesia.svg.png" alt="Logo Danantara" class="logo-danantara">
-            <img src="https://admin-piol.posindonesia.co.id/media/PosIND_Main%20Color.png" alt="Logo PosIND" class="logo-posind">
-        </div>
-
-        <h2>Alat Perapih Data <span class="accent">PosIND</span></h2>
-        <p class="subtitle">Gabungkan dan rapikan file laporan Anda secara lokal dan aman.</p>
-
-        <div class="tab-container">
-            <button class="tab-btn active" id="tab-bukpot" onclick="switchTab('bukpot')">Bukti Potong (BPU/BPUP)</button>
-            <button class="tab-btn" id="tab-mileapp" onclick="switchTab('mileapp')">Resi Mile App (POD)</button>
-            <button class="tab-btn" id="tab-pranpp" onclick="switchTab('pranpp')">Dokumen Web PRANPP</button>
-            <button class="tab-btn" id="tab-pid" onclick="switchTab('pid')">Web PID (Lacak Kiriman)</button>
-        </div>
-
-        <div class="upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
-            <span class="upload-label-btn">+ Tambah File (CSV / XLS / HTML)</span>
-            <p style="font-weight: 500; margin: 5px 0; color: #475569;">atau Seret & Letakkan (Drag & Drop) file Anda ke area ini berkali-kali</p>
-            <input type="file" id="fileInput" accept=".csv, .xlsx, .xls, .html" multiple>
-            <div class="note">*Mendukung penggabungan banyak file sekaligus.</div>
-            <span id="fileCount">Belum ada file terpilih</span>
-        </div>
-
-        <div class="file-list-container" id="fileListContainer"></div>
-
-        <div class="btn-group">
-            <button id="processBtn" class="action-btn" onclick="processFiles()">Proses Semua Data</button>
-            <button id="downloadBtn" class="action-btn" onclick="downloadExcel()" style="display:none;">Download Excel Rapi</button>
-        </div>
-
-        <div id="status"></div>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/" aria-label="Clean PosNew, halaman utama">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32"><path d="M8 5.5h11.4L25 11v15.5H8z"/><path d="M19 5.5V11h6"/><path d="M12 16h9M12 20h9"/></svg>
+        </span>
+        <span><strong>Clean</strong><small>PosNew</small></span>
+      </a>
+      <div class="header-meta">
+        <span class="privacy-chip">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.9 2.9 8.2 7 10 4.1-1.8 7-5.1 7-10V6z"/><path d="m9.5 12 1.7 1.7 3.6-4"/></svg>
+          Diproses lokal di browser
+        </span>
+        <button class="icon-button" id="helpBtn" type="button" aria-label="Buka panduan singkat" title="Panduan singkat">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.8 9a2.4 2.4 0 1 1 3.6 2.1c-.9.5-1.4 1.1-1.4 2.1M12 17h.01"/></svg>
+        </button>
+      </div>
     </div>
-</div>
+  </header>
 
-<footer class="dashboard-footer">
-    <div class="footer-brand">
-        <i data-lucide="layers" style="color: #EF4123; width: 18px; height: 18px;"></i>
-        PosNew Hub
+  <main id="workspace" class="page-shell">
+    <section class="hero" aria-labelledby="pageTitle">
+      <div>
+        <p class="eyebrow">Workspace pengolahan dokumen</p>
+        <h1 id="pageTitle">Rapikan data, lebih cepat dan terstruktur.</h1>
+        <p class="hero-copy">Gabungkan file laporan, periksa hasil, lalu unduh Excel yang sudah dirapikan—tanpa mengunggah dokumen ke server kami.</p>
+      </div>
+      <ol class="steps" aria-label="Tahapan penggunaan">
+        <li class="is-active" data-step="upload"><span>1</span><div><b>Unggah</b><small>Tambahkan file</small></div></li>
+        <li data-step="process"><span>2</span><div><b>Proses</b><small>Rapikan data</small></div></li>
+        <li data-step="review"><span>3</span><div><b>Periksa</b><small>Tinjau hasil</small></div></li>
+        <li data-step="download"><span>4</span><div><b>Unduh</b><small>Simpan Excel</small></div></li>
+      </ol>
+    </section>
+
+    <section class="summary-grid" aria-label="Ringkasan workspace">
+      <article><span class="summary-icon neutral" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16v13H4zM8 4h8v3H8z"/></svg></span><div><small>Total file</small><strong id="statTotal">0</strong></div></article>
+      <article><span class="summary-icon ready" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5 9.2 17 19 7"/></svg></span><div><small>Siap</small><strong id="statReady">0</strong></div></article>
+      <article><span class="summary-icon review" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4 3.5 19h17zM12 9v4M12 16h.01"/></svg></span><div><small>Perlu diperiksa</small><strong id="statReview">0</strong></div></article>
+      <article><span class="summary-icon done" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.6 2.6L16.5 9"/></svg></span><div><small>Selesai</small><strong id="statDone">0</strong></div></article>
+      <article><span class="summary-icon failed" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6m0-6-6 6"/></svg></span><div><small>Gagal</small><strong id="statFailed">0</strong></div></article>
+    </section>
+
+    <section class="mode-card" aria-labelledby="modeHeading">
+      <div class="section-heading compact">
+        <div>
+          <p class="section-kicker">1. Pilih jenis data</p>
+          <h2 id="modeHeading">Sesuaikan pemrosesan dengan sumber file</h2>
+        </div>
+      </div>
+      <div class="mode-tabs" role="tablist" aria-label="Jenis data">
+        <button class="mode-tab is-active" id="tab-bukpot" type="button" role="tab" aria-selected="true" data-mode="bukpot">
+          <span class="mode-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM15 3v5h4M9 12h7M9 16h7"/></svg></span>
+          <span><b>Bukti Potong</b><small>BPU / BPUP</small></span>
+          <svg class="check-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.3 2.4 4.8-5"/></svg>
+        </button>
+        <button class="mode-tab" id="tab-mileapp" type="button" role="tab" aria-selected="false" data-mode="mileapp">
+          <span class="mode-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 7h11v10H3zM14 10h4l3 3v4h-7zM7 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm10 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/></svg></span>
+          <span><b>Resi Mile App</b><small>Proof of Delivery</small></span>
+          <svg class="check-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.3 2.4 4.8-5"/></svg>
+        </button>
+        <button class="mode-tab" id="tab-pranpp" type="button" role="tab" aria-selected="false" data-mode="pranpp">
+          <span class="mode-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h16v14H4zM4 9h16M9 9v10"/></svg></span>
+          <span><b>Web PRANPP</b><small>Dokumen anggaran</small></span>
+          <svg class="check-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.3 2.4 4.8-5"/></svg>
+        </button>
+        <button class="mode-tab" id="tab-pid" type="button" role="tab" aria-selected="false" data-mode="pid">
+          <span class="mode-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 9h8M8 13h5M8 17h8"/></svg></span>
+          <span><b>Web PID</b><small>Lacak kiriman</small></span>
+          <svg class="check-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.3 2.4 4.8-5"/></svg>
+        </button>
+      </div>
+      <div class="mode-note" id="modeNote" role="status">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+        <span><b>Format yang diterima:</b> CSV hasil ekspor Bukti Potong (BPU/BPUP).</span>
+      </div>
+    </section>
+
+    <div class="workspace-grid">
+      <section class="panel upload-panel" aria-labelledby="uploadHeading">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">2. Unggah dokumen</p>
+            <h2 id="uploadHeading">Tambahkan file untuk diproses</h2>
+            <p id="uploadDescription">Pilih satu atau beberapa file. File duplikat akan dilewati otomatis.</p>
+          </div>
+          <button class="text-button danger-text" id="clearBtn" type="button" disabled>
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg>
+            Bersihkan
+          </button>
+        </div>
+
+        <div class="drop-zone" id="dropZone" tabindex="0" role="button" aria-describedby="dropHelp fileCount">
+          <input id="fileInput" type="file" accept=".csv" multiple>
+          <span class="upload-illustration" aria-hidden="true">
+            <svg viewBox="0 0 48 48"><path d="M10 8h18l10 10v22H10z"/><path d="M28 8v10h10M24 31V20m0 0-5 5m5-5 5 5"/></svg>
+          </span>
+          <h3>Tarik dan letakkan file di sini</h3>
+          <p>atau pilih file dari perangkat Anda</p>
+          <button class="secondary-button" id="chooseBtn" type="button">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 6h6l2 2h8v10H4z"/></svg>
+            Pilih file
+          </button>
+          <small id="dropHelp">Dokumen tetap berada di perangkat Anda selama proses berlangsung.</small>
+        </div>
+
+        <div class="file-toolbar">
+          <div>
+            <strong id="fileCount">Belum ada file</strong>
+            <small id="fileSizeTotal">Total ukuran 0 KB</small>
+          </div>
+          <button class="text-button" id="addMoreBtn" type="button" disabled>
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            Tambah file
+          </button>
+        </div>
+
+        <div class="empty-list" id="emptyList">
+          <svg aria-hidden="true" viewBox="0 0 48 48"><path d="M9 10h21l9 9v19H9zM30 10v9h9M15 28h18M15 33h12"/></svg>
+          <p>Daftar file akan tampil di sini.</p>
+        </div>
+        <div class="file-list" id="fileList" aria-live="polite"></div>
+      </section>
+
+      <aside class="panel action-panel" aria-labelledby="actionHeading">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">3. Proses data</p>
+            <h2 id="actionHeading">Siapkan hasil akhir</h2>
+            <p>Periksa ringkasan sebelum memulai.</p>
+          </div>
+        </div>
+
+        <div class="process-summary">
+          <div><span>Jenis data</span><strong id="summaryMode">Bukti Potong</strong></div>
+          <div><span>File valid</span><strong id="summaryFiles">0 file</strong></div>
+          <div><span>Format output</span><strong>Excel (.xlsx)</strong></div>
+        </div>
+
+        <div class="progress-card is-hidden" id="progressCard" aria-live="polite">
+          <div class="progress-head"><strong id="progressTitle">Memproses dokumen</strong><span id="progressPercent">0%</span></div>
+          <div class="progress-track"><span id="progressBar"></span></div>
+          <p id="progressDetail">Menyiapkan file...</p>
+        </div>
+
+        <button class="primary-button full-width" id="processBtn" type="button" disabled>
+          <span class="button-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8m7.2 7.2 2.8 2.8M18.4 5.6l-2.8 2.8m-7.2 7.2-2.8 2.8"/></svg></span>
+          <span class="button-label">Proses semua data</span>
+        </button>
+        <button class="secondary-button full-width is-hidden" id="cancelBtn" type="button">Batalkan setelah file ini</button>
+        <button class="secondary-button full-width is-hidden" id="retryBtn" type="button">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M19 8V4l-2 2a8 8 0 1 0 2.2 8M19 4h-4"/></svg>
+          Coba ulang file gagal
+        </button>
+
+        <div class="status-message" id="statusMessage" role="status" aria-live="polite">
+          <span class="status-dot"></span>
+          <div><strong>Menunggu file</strong><p>Tambahkan file untuk mulai memproses.</p></div>
+        </div>
+
+        <div class="privacy-note">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 10V7a5 5 0 0 1 10 0v3M5 10h14v11H5z"/></svg>
+          <div><strong>Privasi terjaga</strong><p>Dokumen diproses secara lokal di browser dan tidak dikirim ke server kami.</p></div>
+        </div>
+      </aside>
     </div>
-    <p class="footer-desc">Sistem utilitas ini dikembangkan secara independen untuk optimalisasi efisiensi layanan logistik B2B dan Ritel.</p>
-    <div class="footer-creator-badge">
-        <i data-lucide="code-2" style="color: #EF4123; width: 14px; height: 14px;"></i>
-        Inovasi oleh <strong>Ikhsan Radiansyah</strong> &copy; 2026
+
+    <section class="panel results-panel is-hidden" id="resultsPanel" aria-labelledby="resultsHeading">
+      <div class="results-header">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">4. Periksa dan unduh</p>
+            <h2 id="resultsHeading">Hasil pemrosesan</h2>
+            <p id="resultsDescription">Tinjau ringkasan data sebelum mengunduh.</p>
+          </div>
+        </div>
+        <button class="success-button" id="downloadBtn" type="button" disabled>
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
+          Unduh Excel rapi
+        </button>
+      </div>
+
+      <div class="result-metrics">
+        <div><small>Total baris</small><strong id="resultRows">0</strong></div>
+        <div><small>File berhasil</small><strong id="resultFiles">0</strong></div>
+        <div><small>Perlu diperiksa</small><strong id="resultReview">0</strong></div>
+        <div><small>File gagal</small><strong id="resultFailed">0</strong></div>
+      </div>
+
+      <div class="table-toolbar">
+        <label class="search-field" for="resultSearch">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/></svg>
+          <input id="resultSearch" type="search" placeholder="Cari pada hasil..." autocomplete="off">
+        </label>
+        <span id="tableCount">Menampilkan 0 baris</span>
+      </div>
+      <div class="table-wrap" tabindex="0" aria-label="Tabel pratinjau hasil">
+        <table id="resultTable">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="table-note" id="tableNote">Pratinjau dibatasi untuk menjaga performa. File Excel tetap memuat seluruh data.</p>
+    </section>
+
+    <section class="disclaimer" aria-label="Informasi penting">
+      <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+      <p><strong>Catatan:</strong> Clean PosNew adalah alat bantu pengolahan dokumen dan bukan layanan resmi Direktorat Jenderal Pajak. Selalu periksa kembali hasil sebelum digunakan.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <a href="https://posnew.com" target="_blank" rel="noopener noreferrer"><strong>PosNew Hub</strong></a>
+    <span>Practical tools for simpler document workflows.</span>
+    <small>&copy; 2026 PosNew Hub</small>
+  </footer>
+
+  <dialog class="help-dialog" id="helpDialog" aria-labelledby="helpTitle">
+    <div class="dialog-head">
+      <div><p class="section-kicker">Panduan singkat</p><h2 id="helpTitle">Cara menggunakan Clean PosNew</h2></div>
+      <button class="icon-button" id="closeHelpBtn" type="button" aria-label="Tutup panduan">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg>
+      </button>
     </div>
-</footer>
+    <ol class="help-steps">
+      <li><span>1</span><div><strong>Pilih jenis data</strong><p>Gunakan mode yang sesuai dengan sumber laporan.</p></div></li>
+      <li><span>2</span><div><strong>Tambahkan file</strong><p>Pilih banyak file sekaligus atau gunakan drag and drop.</p></div></li>
+      <li><span>3</span><div><strong>Proses dan periksa</strong><p>Status tiap file serta pratinjau hasil akan ditampilkan.</p></div></li>
+      <li><span>4</span><div><strong>Unduh Excel</strong><p>Simpan seluruh data dalam satu workbook yang sudah dirapikan.</p></div></li>
+    </ol>
+    <button class="primary-button full-width" id="understoodBtn" type="button">Mengerti</button>
+  </dialog>
 
-<script src="https://unpkg.com/lucide@latest"></script>
-<script>if (typeof lucide !== 'undefined') { lucide.createIcons(); }</script>
+  <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
 
-<script>
-    let finalData = [];
-    let fileTypeGlobal = 'bukpot';
-    let selectedFilesArray = [];
-
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('fileInput');
-    const fileCountText = document.getElementById('fileCount');
-    const fileListContainer = document.getElementById('fileListContainer');
-
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropZone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
-        document.body.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
-    });
-
-    ['dragenter', 'dragover'].forEach(eventName => { dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false); });
-    ['dragleave', 'drop'].forEach(eventName => { dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false); });
-
-    dropZone.addEventListener('drop', e => {
-        dropZone.classList.remove('dragover');
-        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) handleNewFiles(e.dataTransfer.files);
-    }, false);
-
-    fileInput.addEventListener('change', (e) => {
-        if (e.target.files && e.target.files.length > 0) handleNewFiles(e.target.files);
-        fileInput.value = ""; 
-    });
-
-    function handleNewFiles(files) {
-        for (let i = 0; i < files.length; i++) {
-            let isDuplicate = selectedFilesArray.some(f => f.name === files[i].name && f.size === files[i].size);
-            if (!isDuplicate) selectedFilesArray.push(files[i]);
-        }
-        updateFileListUI();
-        resetStatus();
-    }
-
-    function removeFile(index) {
-        selectedFilesArray.splice(index, 1);
-        updateFileListUI();
-        resetStatus();
-    }
-
-    function updateFileListUI() {
-        fileListContainer.innerHTML = '';
-        if (selectedFilesArray.length > 0) {
-            fileCountText.innerHTML = `✔️ ${selectedFilesArray.length} file siap diproses.`;
-            fileCountText.style.color = "#27ae60";
-            selectedFilesArray.forEach((file, index) => {
-                const item = document.createElement('div');
-                item.className = 'file-item';
-                let size = (file.size / 1024).toFixed(1);
-                let sizeText = size > 1024 ? (size / 1024).toFixed(2) + " MB" : size + " KB";
-                item.innerHTML = `
-                    <div class="file-name">
-                        <span style="font-size:18px;">📄</span> 
-                        <span><strong>${file.name}</strong> <span style="color:#94a3b8; font-size:12px;">(${sizeText})</span></span>
-                    </div>
-                    <button class="file-remove-btn" onclick="event.stopPropagation(); removeFile(${index})">✖ Hapus</button>
-                `;
-                fileListContainer.appendChild(item);
-            });
-        } else {
-            fileCountText.innerHTML = "Belum ada file terpilih";
-            fileCountText.style.color = "#EF4123";
-        }
-    }
-
-    function switchTab(type) {
-        fileTypeGlobal = type;
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.getElementById('tab-' + type).classList.add('active');
-        selectedFilesArray = [];
-        updateFileListUI();
-        resetStatus();
-    }
-
-    function resetStatus() {
-        document.getElementById('downloadBtn').style.display = "none";
-        document.getElementById('status').innerHTML = "";
-        finalData = [];
-    }
-
-    function formatTeksRapi(text) {
-        if (!text) return "";
-        let upperText = text.toUpperCase().trim();
-        if (upperText.includes("BANK INDONESIA") || upperText.includes("KPW BI KEPRI") || upperText === "KPW BI KEPRI (GABUNGAN)") {
-            return "KANTOR PERWAKILAN BANK INDONESIA KEPULAUAN RIAU";
-        }
-        return upperText;
-    }
-
-    // --- FUNGSI TANGGAL ANTI-CRASH UNTUK EXCEL SERIAL DATE ---
-    function parseDmyDate(dateStr) {
-        if (dateStr === undefined || dateStr === null || dateStr === "") return 0;
-        
-        // 🌟 FIX ERROR CRASH: Tangani jika tanggal terbaca sebagai Angka Seri Excel (contoh: 46218)
-        if (typeof dateStr === 'number') {
-            return (dateStr - 25569) * 86400 * 1000;
-        }
-
-        let str = String(dateStr).trim();
-        let parts = str.split(' ');
-        let dmy = parts[0].split(/[-/]/);
-        if (dmy.length === 3) {
-            let year = dmy[2].length === 4 ? dmy[2] : (dmy[0].length === 4 ? dmy[0] : "20" + dmy[2]);
-            let month = dmy[1];
-            let day = dmy[0].length <= 2 ? dmy[0] : dmy[2];
-            return new Date(`${year}-${month}-${day}T${parts[1] || '00:00:00'}`).getTime();
-        }
-        return 0;
-    }
-
-    async function processFiles() {
-        const statusDiv = document.getElementById('status');
-        const processBtn = document.getElementById('processBtn');
-        const downloadBtn = document.getElementById('downloadBtn');
-
-        if (selectedFilesArray.length === 0) return alert("Silakan tambah file terlebih dahulu.");
-
-        processBtn.disabled = true;
-        statusDiv.innerHTML = "Sedang merapikan data... Mohon tunggu sebentar.";
-        finalData = [];
-
-        try {
-            for (let i = 0; i < selectedFilesArray.length; i++) {
-                const file = selectedFilesArray[i];
-                const ext = file.name.split('.').pop().toLowerCase();
-                
-                const textPreview = await readFileAsText(file);
-                const isHtmlDisguised = textPreview.trim().toLowerCase().startsWith('<');
-
-                if (isHtmlDisguised || ext === 'html') {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(textPreview, 'text/html');
-                    const table = doc.querySelector('table');
-                    let dataArray = [];
-                    if (table) {
-                        const rows = table.querySelectorAll('tr');
-                        rows.forEach(row => {
-                            const rowData = [];
-                            row.querySelectorAll('th, td').forEach(cell => {
-                                rowData.push(cell.textContent.trim());
-                            });
-                            dataArray.push(rowData);
-                        });
-                    }
-
-                    if (fileTypeGlobal === 'pranpp') finalData = finalData.concat(processPranppArray(dataArray));
-                    else if (fileTypeGlobal === 'pid') finalData = finalData.concat(processPidArray(dataArray));
-                    else alert(`File "${file.name}" terdeteksi sebagai HTML/XLS Web. Harap gunakan Tab yang sesuai (PRANPP/PID).`);
-                } 
-                else if (ext === 'xlsx' || ext === 'xls') {
-                    const buffer = await readFileAsArrayBuffer(file);
-                    const workbook = XLSX.read(buffer, { type: 'array' });
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const dataArray = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: "" });
-                    
-                    if (fileTypeGlobal === 'pranpp') finalData = finalData.concat(processPranppArray(dataArray));
-                    else if (fileTypeGlobal === 'pid') finalData = finalData.concat(processPidArray(dataArray));
-                    else alert(`Data "${file.name}" berformat Excel asli. Harap gunakan CSV untuk Tab ini.`);
-                } 
-                else {
-                    if (fileTypeGlobal === 'bukpot') finalData = finalData.concat(processBukpot(textPreview));
-                    else if (fileTypeGlobal === 'mileapp') finalData = finalData.concat(processMileApp(textPreview));
-                    else if (fileTypeGlobal === 'pranpp') finalData = finalData.concat(processPranppCsv(textPreview));
-                    else alert(`File PID Lacak Kiriman seharusnya berbentuk Excel/HTML.`);
-                }
-            }
-
-            if (fileTypeGlobal === 'bukpot') {
-                finalData.sort((a, b) => parseDmyDate(a['Tanggal Bukti Potong']) - parseDmyDate(b['Tanggal Bukti Potong']));
-            } else if (fileTypeGlobal === 'mileapp') {
-                finalData.sort((a, b) => parseDmyDate(a['Tgl Kirim']) - parseDmyDate(b['Tgl Kirim']));
-            } else if (fileTypeGlobal === 'pranpp') {
-                finalData.sort((a, b) => parseDmyDate(a['Tanggal Transaksi']) - parseDmyDate(b['Tanggal Transaksi']));
-            } else if (fileTypeGlobal === 'pid') {
-                finalData.sort((a, b) => {
-                    let d1 = parseDmyDate(a['Tanggal Kirim'] || a['Tgl Kirim']);
-                    let d2 = parseDmyDate(b['Tanggal Kirim'] || b['Tgl Kirim']);
-                    return d1 - d2;
-                });
-            }
-
-            statusDiv.innerHTML = `🎉 Sukses! ${finalData.length} baris data dari ${selectedFilesArray.length} file berhasil dirapikan.`;
-            downloadBtn.style.display = "inline-block";
-        } catch (error) {
-            statusDiv.innerHTML = "❌ Terjadi kesalahan saat membaca file. Detail: " + error.message;
-            console.error(error);
-        } finally {
-            processBtn.disabled = false;
-        }
-    }
-
-    function readFileAsText(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = e => resolve(e.target.result);
-            reader.onerror = e => reject(e);
-            reader.readAsText(file);
-        });
-    }
-
-    function readFileAsArrayBuffer(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = e => resolve(e.target.result);
-            reader.onerror = e => reject(e);
-            reader.readAsArrayBuffer(file);
-        });
-    }
-
-    // --- LOGIKA BUKTI POTONG ---
-    function processBukpot(rawText) {
-        let lines = rawText.split('\n');
-        let cleanedCsvText = "";
-        for (let line of lines) {
-            line = line.trim();
-            if (!line) continue;
-            if (line.includes(';;')) line = line.split(';;')[0];
-            line = line.replace(/;+$/, ''); 
-            cleanedCsvText += line + "\n";
-        }
-        let parsed = Papa.parse(cleanedCsvText, { header: true, skipEmptyLines: true, quoteChar: '"' });
-        let formatted = [];
-        parsed.data.forEach(row => {
-            let npwp = row.npwp_pemotong || row.lawan_transaksi || "";
-            let nama = row.nama_penerima_ph || row.nama_lt || "";
-            if(nama === "" && npwp !== "") nama = "PEMOTONG PAJAK (NPWP: " + npwp + ")";
-            let cleanRow = {
-                "ID": String(row.id || ""),
-                "Nomor Bukti Potong": String(row.nomor_bupot || ""),
-                "Tanggal Bukti Potong": row.tgl_bupot || "",
-                "Masa Pajak": String(row.masa_pajak || "").replace(/\.0$/, ""),
-                "Status": row.status_bupot || "",
-                "NPWP/TIN Lawan Transaksi": String(npwp).replace(/\.0$/, ""),
-                "Nama Lawan Transaksi": formatTeksRapi(nama),
-                "Kode Objek Pajak": row.kop || "",
-                "DPP Bruto": parseFloat(row.dpp_bruto) || 0,
-                "PPh Dipotong": parseFloat(row.pph) || 0,
-                "Dokumen Dasar": formatTeksRapi(row.doc_dp),
-                "Nomor Dokumen": String(row.no_doc_dp || "")
-            };
-            if (row.nitku_pemotong) cleanRow["Keterangan Tambahan"] = "NITKU: " + row.nitku_pemotong;
-            else if (row.dilaporkan_di_spt) cleanRow["Keterangan Tambahan"] = "Dilaporkan di SPT: " + row.dilaporkan_di_spt;
-            if(cleanRow["ID"] && cleanRow["Nomor Bukti Potong"] !== "nomor_bupot") formatted.push(cleanRow);
-        });
-        return formatted;
-    }
-
-    // --- LOGIKA MILE APP (POD) ---
-    function processMileApp(rawText) {
-        let parsed = Papa.parse(rawText, { header: true, skipEmptyLines: true, delimiter: ";" });
-        let formatted = [];
-        const numCols = ["Berat", "Ongkir", "PPN", "HTNB", "Total Bea"];
-        const textCols = ["Nama Pengirim", "Penerima", "Alamat", "Kota", "Status", "Kiriman Diterima Oleh", "Petugas  Eintri", "Instruksi Pengriman", "Deskripsi", "Jenis", "Layanan"];
-        const stringCleanCols = ["No Resi", "No HP", "Kode pos Penerima", "Nip/NIK", "No VA", "Norek", "Norek ", "ID Pelanggan"];
-
-        parsed.data.forEach(row => {
-            if(!row["No Resi"] || row["No Resi"] === "No Resi") return;
-            let cleanRow = {};
-            for (let key in row) {
-                let val = row[key] !== undefined ? String(row[key]) : "";
-                if (numCols.includes(key)) cleanRow[key] = parseFloat(val.replace(/,/g, '')) || 0;
-                else if (textCols.includes(key)) cleanRow[key] = formatTeksRapi(val);
-                else if (stringCleanCols.includes(key) || key.includes("Norek")) cleanRow[key] = val.replace(/\.0$/, "");
-                else cleanRow[key] = val; 
-            }
-            formatted.push(cleanRow);
-        });
-        return formatted;
-    }
-
-    // --- LOGIKA WEB PID (LACAK KIRIMAN) ---
-    function processPidArray(dataArray) {
-        if (dataArray.length < 2) return [];
-        let headerIdx = -1;
-        for (let i = 0; i < Math.min(10, dataArray.length); i++) {
-            if (dataArray[i].includes("Nomor Resi") || dataArray[i].includes("Kantor Asal")) { 
-                headerIdx = i; break; 
-            }
-        }
-        if (headerIdx === -1) return [];
-
-        let headers = dataArray[headerIdx];
-        let formatted = [];
-
-        for (let i = headerIdx + 1; i < dataArray.length; i++) {
-            let row = dataArray[i];
-            if (!row || row.length < 3 || !row[1]) continue; 
-            let cleanRow = {};
-            for (let c = 0; c < headers.length; c++) {
-                let colName = headers[c] || `Column_${c}`;
-                cleanRow[colName] = row[c] !== undefined ? row[c] : "";
-            }
-
-            if (cleanRow["Bea Dasar"] !== undefined) cleanRow["Bea Dasar"] = cleanRupiah(cleanRow["Bea Dasar"]);
-            if (cleanRow["Htnb"] !== undefined) cleanRow["Htnb"] = cleanRupiah(cleanRow["Htnb"]);
-            if (cleanRow["Total"] !== undefined) cleanRow["Total"] = cleanRupiah(cleanRow["Total"]);
-            if (cleanRow["Harga Barang"] !== undefined) cleanRow["Harga Barang"] = cleanRupiah(cleanRow["Harga Barang"]);
-            if (cleanRow["Berat Kiriman"] !== undefined) cleanRow["Berat Kiriman"] = parseFloat(String(cleanRow["Berat Kiriman"]).replace(/,/g, '.')) || 0;
-
-            const textCols = ["Nomor Resi", "Tlp Pengirim", "Tlp Penerima", "Kodepos Tujuan", "Virtual Account", "Nopend Asal", "Nopend Tujuan"];
-            for (let tc of textCols) {
-                if (cleanRow[tc] !== undefined) cleanRow[tc] = String(cleanRow[tc]).replace(/\.0$/, "");
-            }
-            if (cleanRow["Nama Pengirim"] !== undefined) cleanRow["Nama Pengirim"] = formatTeksRapi(cleanRow["Nama Pengirim"]);
-            if (cleanRow["Nama Penerima"] !== undefined) cleanRow["Nama Penerima"] = formatTeksRapi(cleanRow["Nama Penerima"]);
-            if (cleanRow["Kota Penerima"] !== undefined) cleanRow["Kota Penerima"] = formatTeksRapi(cleanRow["Kota Penerima"]);
-            if (cleanRow["Alamat Pengirim"] !== undefined) cleanRow["Alamat Pengirim"] = formatTeksRapi(cleanRow["Alamat Pengirim"]);
-            if (cleanRow["Alamat Penerima"] !== undefined) cleanRow["Alamat Penerima"] = formatTeksRapi(cleanRow["Alamat Penerima"]);
-
-            formatted.push(cleanRow);
-        }
-        return formatted;
-    }
-
-    // --- LOGIKA PENCARI NAMA KOLOM ANTI-ERROR (PENTING) ---
-    // Mencari kunci yang tepat meskipun ada spasi nyasar, huruf besar kecil, atau kata "DAN" (contoh: "Total BSU+Pajak" vs "Total BSU dan Pajak")
-    function findKey(obj, searchKey) {
-        let target = searchKey.toUpperCase().replace(/[\s\+]/g, '').replace('DAN', '');
-        for (let k in obj) {
-            let cleanK = String(k).toUpperCase().replace(/[\s\+]/g, '').replace('DAN', '');
-            if (cleanK === target) return obj[k];
-        }
-        return undefined;
-    }
-
-    // --- LOGIKA WEB PRANPP (BARU - SMART FINDER) ---
-    function cleanRupiah(val) {
-        if (val === undefined || val === null || val === "") return 0;
-        if (typeof val === 'number') return val; 
-        
-        let strVal = String(val).trim();
-        if (strVal === "-" || strVal === "0") return 0;
-
-        strVal = strVal.replace(/Rp/gi, '').replace(/ /g, '');
-        
-        if (strVal.includes('.') && strVal.includes(',')) {
-            let dotIndex = strVal.lastIndexOf('.');
-            let commaIndex = strVal.lastIndexOf(',');
-            if (dotIndex < commaIndex) { 
-                strVal = strVal.replace(/\./g, '').replace(',', '.');
-            } else { 
-                strVal = strVal.replace(/,/g, '');
-            }
-            return parseFloat(strVal) || 0;
-        }
-
-        if (strVal.includes('.')) {
-            let parts = strVal.split('.');
-            if (parts.length > 2) return parseFloat(strVal.replace(/\./g, '')) || 0;
-            let right = parts[1];
-            if (right.length === 3) return parseFloat(strVal.replace(/\./g, '')) || 0;
-            if (right.length === 1) return parseFloat(parts[0] + right + "00") || 0;
-            if (right.length === 2) return parseFloat(parts[0] + right + "0") || 0;
-        }
-        
-        if (strVal.includes(',')) {
-            let parts = strVal.split(',');
-            if (parts.length > 2) return parseFloat(strVal.replace(/,/g, '')) || 0;
-            let right = parts[1];
-            if (right.length === 3) return parseFloat(strVal.replace(/,/g, '')) || 0;
-            return parseFloat(strVal.replace(',', '.')) || 0;
-        }
-        
-        let num = parseFloat(strVal);
-        // Tangani kasus PRANPP memotong nol (cth "300" -> 300.000)
-        if (num > 0 && num < 1000 && !strVal.includes('.') && !strVal.includes(',')) {
-             return num * 1000;
-        }
-        return num || 0;
-    }
-
-    function processPranppArray(dataArray) {
-        if (dataArray.length < 2) return [];
-        
-        let headerIdx = -1;
-        // 🌟 Cari posisi baris header secara dinamis (mengabaikan sel kosong di atasnya)
-        for(let i=0; i < Math.min(15, dataArray.length); i++) {
-            let rowStr = dataArray[i].join("").toUpperCase().replace(/\s/g, '');
-            if (rowStr.includes("NOMORDOKUMEN")) { headerIdx = i; break; }
-        }
-        if (headerIdx === -1) return [];
-
-        let headers = dataArray[headerIdx];
-        let formatted = [];
-
-        for(let i = headerIdx + 1; i < dataArray.length; i++) {
-            let row = dataArray[i];
-            if (!row || row.length < 2) continue; 
-            
-            let tempRow = {};
-            for (let c = 0; c < headers.length; c++) {
-                if (headers[c]) {
-                    let colName = String(headers[c]).trim();
-                    tempRow[colName] = row[c] !== undefined ? row[c] : "";
-                }
-            }
-
-            let noDok = findKey(tempRow, "Nomor Dokumen");
-            if (!noDok) continue; 
-
-            // 🌟 Tarik data dengan Smart Finder (Anti-Bergeser & Anti-Spasi-Kosong)
-            let cleanRow = {
-                "No": parseInt(findKey(tempRow, "No")) || 0,
-                "Nomor Dokumen": String(noDok).trim(),
-                "Masa Laku": findKey(tempRow, "Masa Laku") || "",
-                "Dokumen": findKey(tempRow, "Dokumen") || "",
-                "Tanggal Transaksi": findKey(tempRow, "Tanggal Transaksi") || "",
-                "Jenis Biaya": findKey(tempRow, "Jenis Biaya") || "",
-                "Status Dokumen": findKey(tempRow, "Status Dokumen") || "",
-                "Pemilik Anggaran": findKey(tempRow, "Pemilik Anggaran") || "",
-                "BSU": cleanRupiah(findKey(tempRow, "BSU")),
-                "Keterangan": findKey(tempRow, "Keterangan") || "",
-                "BSU Pajak": cleanRupiah(findKey(tempRow, "BSU Pajak")),
-                "Total": cleanRupiah(findKey(tempRow, "Total")),
-                "Pajak": cleanRupiah(findKey(tempRow, "Pajak")),
-                "Total BSU": cleanRupiah(findKey(tempRow, "Total BSU")),
-                "Total Pajak": cleanRupiah(findKey(tempRow, "Total Pajak")),
-                "Total BSU+Pajak": cleanRupiah(findKey(tempRow, "Total BSU+Pajak")),
-                "Nomor Internal Order": String(findKey(tempRow, "Nomor Internal Order") || "").trim() 
-            };
-            formatted.push(cleanRow);
-        }
-        return formatted;
-    }
-
-    function processPranppCsv(rawText) {
-        let lines = rawText.split('\n');
-        while (lines.length > 0 && !lines[0].toUpperCase().replace(/\s/g, '').includes('NOMORDOKUMEN')) {
-            lines.shift(); 
-        }
-        let parsed = Papa.parse(lines.join('\n'), { header: true, skipEmptyLines: true });
-        let formatted = [];
-        parsed.data.forEach(row => {
-            let noDok = findKey(row, "Nomor Dokumen");
-            if (!noDok) return;
-            
-            let cleanRow = {
-                "No": parseInt(findKey(row, "No")) || 0,
-                "Nomor Dokumen": String(noDok).trim(),
-                "Masa Laku": findKey(row, "Masa Laku") || "",
-                "Dokumen": findKey(row, "Dokumen") || "",
-                "Tanggal Transaksi": findKey(row, "Tanggal Transaksi") || "",
-                "Jenis Biaya": findKey(row, "Jenis Biaya") || "",
-                "Status Dokumen": findKey(row, "Status Dokumen") || "",
-                "Pemilik Anggaran": findKey(row, "Pemilik Anggaran") || "",
-                "BSU": cleanRupiah(findKey(row, "BSU")),
-                "Keterangan": findKey(row, "Keterangan") || "",
-                "BSU Pajak": cleanRupiah(findKey(row, "BSU Pajak")),
-                "Total": cleanRupiah(findKey(row, "Total")),
-                "Pajak": cleanRupiah(findKey(row, "Pajak")),
-                "Total BSU": cleanRupiah(findKey(row, "Total BSU")),
-                "Total Pajak": cleanRupiah(findKey(row, "Total Pajak")),
-                "Total BSU+Pajak": cleanRupiah(findKey(row, "Total BSU+Pajak")),
-                "Nomor Internal Order": String(findKey(row, "Nomor Internal Order") || "").trim()
-            };
-            formatted.push(cleanRow);
-        });
-        return formatted;
-    }
-
-    // --- FUNGSI AUTO-WIDTH ESTIMATOR ---
-    function fitToColumn(data) {
-        if (!data || data.length === 0) return [];
-        let colWidths = [];
-        let headers = Object.keys(data[0]);
-        headers.forEach((key, i) => { colWidths[i] = key.length; });
-        
-        data.forEach(row => {
-            headers.forEach((key, i) => {
-                let val = row[key];
-                let len = 0;
-                if (val !== undefined && val !== null) {
-                    if (typeof val === 'number') {
-                        let isDec = val % 1 !== 0;
-                        let valStr = val.toFixed(isDec ? 2 : 0);
-                        let commas = Math.floor((valStr.split('.')[0].length - 1) / 3);
-                        len = valStr.length + commas;
-                    } else {
-                        len = val.toString().length;
-                    }
-                }
-                if (len > colWidths[i]) colWidths[i] = len;
-            });
-        });
-        return colWidths.map(w => ({ wch: Math.min(Math.max(w + 3, 12), 60) }));
-    }
-
-    // --- EXPORT KE EXCEL & STYLING ---
-    function downloadExcel() {
-        if (finalData.length === 0) return alert("Tidak ada data untuk diunduh.");
-
-        try {
-            const ws = XLSX.utils.json_to_sheet(finalData);
-            ws['!cols'] = fitToColumn(finalData);
-
-            const range = XLSX.utils.decode_range(ws['!ref']);
-            for (let R = range.s.r; R <= range.e.r; ++R) {
-                for (let C = range.s.c; C <= range.e.c; ++C) {
-                    const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-                    if (!ws[cellRef]) continue;
-
-                    ws[cellRef].s = {};
-                    let headerName = Object.keys(finalData[0])[C];
-
-                    if (R === 0) {
-                        ws[cellRef].s = {
-                            fill: { patternType: "solid", fgColor: { rgb: "1C2D5A" } },
-                            font: { bold: true, color: { rgb: "FFFFFF" }, name: "Arial", sz: 11 },
-                            alignment: { horizontal: "center", vertical: "center", wrapText: true },
-                            border: {
-                                top: { style: "thin", color: { rgb: "CCCCCC" } },
-                                bottom: { style: "medium", color: { rgb: "1C2D5A" } },
-                                left: { style: "thin", color: { rgb: "CCCCCC" } },
-                                right: { style: "thin", color: { rgb: "CCCCCC" } }
-                            }
-                        };
-                    } 
-                    else {
-                        ws[cellRef].s = { 
-                            font: { name: "Arial", sz: 10 },
-                            alignment: { vertical: "center", horizontal: "left" },
-                            border: {
-                                top: { style: "thin", color: { rgb: "E5E5E5" } },
-                                bottom: { style: "thin", color: { rgb: "E5E5E5" } },
-                                left: { style: "thin", color: { rgb: "E5E5E5" } },
-                                right: { style: "thin", color: { rgb: "E5E5E5" } }
-                            }
-                        };
-                        
-                        const textColumns = [
-                            "Nomor Internal Order", "Nomor Dokumen", "No Resi", "Nomor Resi", "No HP", 
-                            "Tlp Pengirim", "Tlp Penerima", "Kodepos Tujuan", "Virtual Account", 
-                            "NPWP/TIN Lawan Transaksi", "Masa Pajak", "ID", "Nopend Asal", "Nopend Tujuan",
-                            "Kode pos Penerima", "Nip/NIK", "No VA", "Norek ", "Norek", "ID Pelanggan"
-                        ];
-
-                        if (textColumns.includes(headerName)) {
-                            ws[cellRef].t = 's'; 
-                            ws[cellRef].v = String(ws[cellRef].v);
-                            ws[cellRef].s.alignment.horizontal = "left";
-                        }
-                        else if (ws[cellRef].t === 'n') {
-                            if (headerName === "No" || headerName === "Berat") {
-                                ws[cellRef].s.alignment.horizontal = "center";
-                            } 
-                            // 🌟 FIX ERROR FORMAT: Jangan pasang format Uang untuk Kolom Tanggal!
-                            else if (headerName.toLowerCase().includes("tanggal") || headerName.toLowerCase().includes("tgl") || headerName.toLowerCase().includes("masa")) {
-                                ws[cellRef].s.alignment.horizontal = "center";
-                                ws[cellRef].z = "dd-mm-yyyy"; 
-                                ws[cellRef].s.numFmt = "dd-mm-yyyy";
-                            } 
-                            else {
-                                // 🌟 Terapkan Format Rupiah (Titik Ribuan: 1.000.000)
-                                let isDecimal = ws[cellRef].v % 1 !== 0;
-                                let fPattern = isDecimal ? "#,##0.00" : "#,##0";
-                                ws[cellRef].z = fPattern; 
-                                ws[cellRef].s.numFmt = fPattern;
-                                ws[cellRef].s.alignment.horizontal = "right";
-                            }
-                        }
-                    }
-                }
-            }
-
-            const wb = XLSX.utils.book_new();
-            let sheetName = "Data";
-            let fileName = "Rekap_Data.xlsx";
-            
-            if (fileTypeGlobal === 'bukpot') {
-                sheetName = "Bukti_Potong";
-                fileName = "Rekap_Bukti_Potong_PosIND.xlsx";
-            } else if (fileTypeGlobal === 'mileapp') {
-                sheetName = "Resi_MileApp";
-                fileName = "Rekap_MileApp_PosIND.xlsx";
-            } else if (fileTypeGlobal === 'pranpp') {
-                sheetName = "Data_PRANPP";
-                fileName = "Rekap_Dokumen_PRANPP_PosIND.xlsx";
-            } else if (fileTypeGlobal === 'pid') {
-                sheetName = "Data_PID";
-                fileName = "Rekap_Lacak_Kiriman_PID.xlsx";
-            }
-
-            XLSX.utils.book_append_sheet(wb, ws, sheetName);
-            XLSX.writeFile(wb, fileName);
-            
-        } catch (error) {
-            alert("Gagal mengekspor file Excel. Pesan Error: " + error.message);
-            console.error(error);
-        }
-    }
-</script>
-
+  <noscript><div class="noscript">JavaScript harus diaktifkan agar aplikasi dapat memproses dokumen.</div></noscript>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" integrity="sha512-dfX5uYVXzyU8+KHqj8bjo7UkOdg18PaOtpa48djpNbZHwExddghZ+ZmzWT06R5v6NSk3ZUfsH6FNEDepLx9hPQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+  <script defer src="/assets/js/app.js?v=20260727"></script>
 </body>
 </html>

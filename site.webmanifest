@@ -1,0 +1,16 @@
+{
+  "name": "Clean PosNew",
+  "short_name": "Clean PosNew",
+  "description": "Workspace berbasis browser untuk merapikan dan menggabungkan data dokumen operasional.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f2f4f8",
+  "theme_color": "#17264d",
+  "lang": "id-ID",
+  "icons": [
+    {"src": "/assets/icons/app-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"},
+    {"src": "/assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "/assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630"><stop stop-color="#101933"/><stop offset="1" stop-color="#213765"/></linearGradient>
+    <linearGradient id="doc" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#e9eef8"/></linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="1070" cy="100" r="230" fill="#2b4a7f" opacity=".55"/>
+  <circle cx="80" cy="600" r="250" fill="#ef4b28" opacity=".11"/>
+  <g transform="translate(745 105)">
+    <rect x="0" y="30" width="290" height="380" rx="28" fill="#0b1227" opacity=".28"/>
+    <path d="M18 0h190l82 82v300a28 28 0 0 1-28 28H18A28 28 0 0 1-10 382V28A28 28 0 0 1 18 0Z" fill="url(#doc)"/>
+    <path d="M208 0v82h82" fill="none" stroke="#c9d2e3" stroke-width="10"/>
+    <path d="M42 145h190M42 205h190M42 265h135" stroke="#2b4a7f" stroke-width="18" stroke-linecap="round" opacity=".78"/>
+    <circle cx="235" cy="345" r="64" fill="#ef4b28"/>
+    <path d="m205 344 20 21 42-46" fill="none" stroke="#fff" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="90" y="175" fill="#ff8c71" font-family="Arial, sans-serif" font-size="26" font-weight="700" letter-spacing="4">WORKSPACE DOKUMEN</text>
+  <text x="90" y="270" fill="#fff" font-family="Arial, sans-serif" font-size="72" font-weight="800">Clean <tspan fill="#ef4b28">PosNew</tspan></text>
+  <text x="90" y="340" fill="#d5dbea" font-family="Arial, sans-serif" font-size="32">Rapikan data lebih cepat</text>
+  <text x="90" y="390" fill="#d5dbea" font-family="Arial, sans-serif" font-size="32">dan terstruktur.</text>
+  <rect x="90" y="455" width="485" height="58" rx="29" fill="#fff" opacity=".1"/>
+  <path d="M126 476v16m-8-8h16" stroke="#77d4aa" stroke-width="4" stroke-linecap="round"/>
+  <text x="155" y="493" fill="#fff" font-family="Arial, sans-serif" font-size="22">Diproses lokal di browser</text>
+</svg>
