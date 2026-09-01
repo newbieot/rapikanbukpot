@@ -1,3 +1,12 @@
+## 2026-09-01 — Penambahan tab Invoice SAP BATAM
+
+### Ditambahkan
+
+- Mode baru **Invoice SAP BATAM**: memproses file Excel (`.xlsx`, `.xls`) dan CSV data SAPX/SAP BATAM langsung di browser.
+- Transformasi 17 kolom laporan lampiran invoice: penomoran berurutan, klasifikasi COD/NON COD, normalisasi tanggal kirim/pickup, nama penerima kapital, nomor resi, ongkir pos, telepon penerima, alamat, deskripsi barang, nilai COD, berat/koli, No VA, status pos, dan formula hyperlink foto tracking Kibana (`=HYPERLINK(...)`).
+- Format Excel otomatis: nama sheet dinamis per bulan (`Report {BULAN} SAPX`), nama file `Report_{Bulan}_SAPX_Formatted.xlsx`, pemisah ribuan `#,##0` untuk ongkir dan COD, freeze panes `A2`, autofilter, dan styling header Navy `#17264D`.
+- Antarmuka tab ke-5 dengan layout responsif di desktop, tablet, dan ponsel.
+
 ## 2026-07-27 — Penyesuaian footer
 
 ### Diubah

@@ -2,14 +2,15 @@
 
 Clean PosNew adalah aplikasi statis berbasis browser untuk menggabungkan dan merapikan data operasional menjadi file Excel. Seluruh pembacaan dan pemrosesan file berlangsung di browser pengguna; repository ini tidak memiliki endpoint upload dokumen.
 
-## Mode yang dipertahankan
+## Mode yang didukung
 
 1. **Bukti Potong (BPU/BPUP)** — input CSV.
 2. **Resi Mile App (POD)** — input CSV dengan delimiter titik koma.
 3. **Web PRANPP** — input CSV, XLS, XLSX, atau HTML hasil ekspor web.
 4. **Web PID / Lacak Kiriman** — input XLS, XLSX, atau HTML hasil ekspor web.
+5. **Invoice SAP BATAM (SAPX)** — input Excel (.xlsx/.xls) atau CSV lampiran invoice data SAPX/SAP BATAM.
 
-Nama workbook, nama sheet, transformasi kolom, pemformatan nilai, normalisasi teks, pengurutan tanggal, dan kompatibilitas format output lama tetap dipertahankan.
+Nama workbook, nama sheet, transformasi kolom, pemformatan nilai, normalisasi teks, pengurutan tanggal, formula hyperlink, dan kompatibilitas format output tetap dipertahankan.
 
 ## Menjalankan secara lokal
 

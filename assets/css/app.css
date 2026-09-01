@@ -98,7 +98,7 @@ svg { display: block; fill: none; stroke: currentColor; stroke-width: 1.8; strok
 .section-heading.compact { margin-bottom: 14px; }
 .section-heading h2 { margin: 0; color: var(--navy-950); font-size: 1.05rem; letter-spacing: -.02em; }
 .section-heading p:not(.section-kicker) { margin: 6px 0 0; color: var(--muted); font-size: .82rem; line-height: 1.5; }
-.mode-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.mode-tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
 .mode-tab { position: relative; min-width: 0; min-height: 74px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 11px; padding: 12px; text-align: left; background: var(--surface-alt); border: 1px solid var(--line); border-radius: 12px; cursor: pointer; transition: .18s ease; }
 .mode-tab:hover { border-color: #bcc6d7; transform: translateY(-1px); }
 .mode-tab:focus-visible { outline: none; box-shadow: var(--focus); }
@@ -288,7 +288,7 @@ tbody tr:hover td:first-child { background: #f1f4f9; }
   .hero { grid-template-columns: 1fr; align-items: start; gap: 20px; }
   .steps { justify-content: flex-start; }
   .summary-grid { grid-template-columns: repeat(5, minmax(125px, 1fr)); overflow-x: auto; padding-bottom: 3px; scrollbar-width: thin; }
-  .mode-tabs { grid-template-columns: repeat(2, 1fr); }
+  .mode-tabs { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
 }
 
 @media (max-width: 820px) {

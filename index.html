@@ -6,23 +6,23 @@
   <meta name="theme-color" content="#17264d">
   <meta name="color-scheme" content="light">
   <title>Clean PosNew – Rapikan Dokumen Bukti Potong</title>
-  <meta name="description" content="Rapikan dan gabungkan data Bukti Potong, Mile App, PRANPP, dan PID melalui workspace berbasis browser yang praktis dan mudah digunakan.">
+  <meta name="description" content="Rapikan dan gabungkan data Bukti Potong, Mile App, PRANPP, PID, dan Lampiran Invoice SAP BATAM melalui workspace berbasis browser yang praktis.">
   <link rel="canonical" href="https://clean.posnew.com/">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="id_ID">
-  <meta property="og:title" content="Clean PosNew – Rapikan Dokumen Bukti Potong">
-  <meta property="og:description" content="Workspace ringan untuk merapikan dan menggabungkan data dokumen operasional langsung di browser.">
+  <meta property="og:title" content="Clean PosNew – Rapikan Dokumen Operasional & Invoice">
+  <meta property="og:description" content="Workspace ringan untuk merapikan dan menggabungkan data dokumen operasional dan invoice langsung di browser.">
   <meta property="og:url" content="https://clean.posnew.com/">
   <meta property="og:image" content="https://clean.posnew.com/assets/images/og-clean-posnew.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Clean PosNew – Rapikan Dokumen Bukti Potong">
-  <meta name="twitter:description" content="Workspace ringan untuk merapikan dan menggabungkan data dokumen operasional langsung di browser.">
+  <meta name="twitter:title" content="Clean PosNew – Rapikan Dokumen Operasional & Invoice">
+  <meta name="twitter:description" content="Workspace ringan untuk merapikan dan menggabungkan data dokumen operasional dan invoice langsung di browser.">
   <meta name="twitter:image" content="https://clean.posnew.com/assets/images/og-clean-posnew.png">
   <link rel="icon" href="/favicon-rapikanbukpot.png" sizes="48x48" type="image/png">
   <link rel="icon" href="/assets/icons/app-icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png" sizes="180x180">
   <link rel="manifest" href="/site.webmanifest">
-  <link rel="stylesheet" href="/assets/css/app.css?v=20260727-2">
+  <link rel="stylesheet" href="/assets/css/app.css?v=20260901-1">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -31,7 +31,7 @@
     "applicationCategory": "BusinessApplication",
     "operatingSystem": "Any",
     "url": "https://clean.posnew.com/",
-    "description": "Alat bantu berbasis browser untuk merapikan dan menggabungkan data Bukti Potong, Mile App, PRANPP, dan PID.",
+    "description": "Alat bantu berbasis browser untuk merapikan dan menggabungkan data Bukti Potong, Mile App, PRANPP, PID, dan Lampiran Invoice SAP BATAM.",
     "offers": {"@type": "Offer", "price": "0", "priceCurrency": "IDR"}
   }
   </script>
@@ -108,6 +108,11 @@
         <button class="mode-tab" id="tab-pid" type="button" role="tab" aria-selected="false" data-mode="pid">
           <span class="mode-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 9h8M8 13h5M8 17h8"/></svg></span>
           <span><b>Web PID</b><small>Lacak kiriman</small></span>
+          <svg class="check-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.3 2.4 4.8-5"/></svg>
+        </button>
+        <button class="mode-tab" id="tab-sapbatam" type="button" role="tab" aria-selected="false" data-mode="sapbatam">
+          <span class="mode-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 3h16v18l-3-2-3 2-3-2-3 2-4-2V3z"/><path d="M8 7h8M8 11h8M8 15h4"/></svg></span>
+          <span><b>Invoice SAP BATAM</b><small>Lampiran Invoice SAPX</small></span>
           <svg class="check-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.3 2.4 4.8-5"/></svg>
         </button>
       </div>
@@ -283,6 +288,6 @@
   <noscript><div class="noscript">JavaScript harus diaktifkan agar aplikasi dapat memproses dokumen.</div></noscript>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" integrity="sha512-dfX5uYVXzyU8+KHqj8bjo7UkOdg18PaOtpa48djpNbZHwExddghZ+ZmzWT06R5v6NSk3ZUfsH6FNEDepLx9hPQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
-  <script defer src="/assets/js/app.js?v=20260727"></script>
+  <script defer src="/assets/js/app.js?v=20260901"></script>
 </body>
 </html>

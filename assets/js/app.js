@@ -1,6 +1,16 @@
 (() => {
   'use strict';
 
+  const INDONESIAN_MONTHS = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+
+  function getIndonesianMonthName(dateObj) {
+    const d = dateObj instanceof Date ? dateObj : new Date();
+    return INDONESIAN_MONTHS[d.getMonth()] || 'Januari';
+  }
+
   const MODES = {
     bukpot: {
       label: 'Bukti Potong',
@@ -37,6 +47,15 @@
       extensions: ['xlsx', 'xls', 'html', 'htm'],
       note: 'Excel atau HTML hasil ekspor Web PID / Lacak Kiriman.',
       emptyHint: 'Pastikan file memiliki kolom Nomor Resi atau Kantor Asal.'
+    },
+    sapbatam: {
+      label: 'Invoice SAP BATAM',
+      outputSheet: () => `Report ${getIndonesianMonthName().toUpperCase()} SAPX`,
+      outputFile: () => `Report_${getIndonesianMonthName()}_SAPX_Formatted.xlsx`,
+      accept: '.xlsx,.xls,.csv',
+      extensions: ['xlsx', 'xls', 'csv'],
+      note: 'File Excel (.xlsx/.xls) atau CSV lampiran invoice SAPX / SAP BATAM.',
+      emptyHint: 'Pastikan file memiliki kolom No Resi, COD/CCOD, Total Bea, dan Tgl Kirim.'
     }
   };
 
@@ -109,6 +128,10 @@
       processPidArray,
       processPranppArray,
       processPranppCsv,
+      processSapBatamArray,
+      processSapBatamCsv,
+      cleanSapNumber,
+      normalizeSapDate,
       cleanRupiah,
       parseDmyDate
     };
@@ -434,7 +457,7 @@
     }
 
     if (extension === 'xlsx' || extension === 'xls') {
-      if (!['pranpp', 'pid'].includes(state.mode)) throw new Error('MODE_MISMATCH_EXCEL');
+      if (!['pranpp', 'pid', 'sapbatam'].includes(state.mode)) throw new Error('MODE_MISMATCH_EXCEL');
       const buffer = await readFileAsArrayBuffer(file);
       let workbook;
       try {
@@ -447,7 +470,8 @@
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
       const dataArray = window.XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '', raw: true });
       if (state.mode === 'pranpp') return processPranppArray(dataArray);
-      return processPidArray(dataArray);
+      if (state.mode === 'pid') return processPidArray(dataArray);
+      if (state.mode === 'sapbatam') return processSapBatamArray(dataArray);
     }
 
     const text = await readFileAsText(file);
@@ -455,6 +479,7 @@
     if (state.mode === 'bukpot') return processBukpot(text);
     if (state.mode === 'mileapp') return processMileApp(text);
     if (state.mode === 'pranpp') return processPranppCsv(text);
+    if (state.mode === 'sapbatam') return processSapBatamCsv(text);
     throw new Error('MODE_MISMATCH_PID');
   }
 
@@ -727,6 +752,172 @@
     };
   }
 
+  function cleanSapNumber(val) {
+    if (val === undefined || val === null || val === '') return 0;
+    if (typeof val === 'number') return Number.isFinite(val) ? val : 0;
+    let s = String(val).trim();
+    if (s === '-' || s === '') return 0;
+    s = s.replace(/,/g, '').replace(/\./g, '').trim();
+    const n = parseFloat(s);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function normalizeSapDate(val) {
+    if (val === undefined || val === null || val === '') return '';
+    if (val instanceof Date) {
+      const pad = (n) => String(n).padStart(2, '0');
+      const day = pad(val.getDate());
+      const month = pad(val.getMonth() + 1);
+      const year = val.getFullYear();
+      const hours = val.getHours();
+      const mins = val.getMinutes();
+      const secs = val.getSeconds();
+      if (hours > 0 || mins > 0 || secs > 0) {
+        return `${day}-${month}-${year} ${pad(hours)}:${pad(mins)}:${pad(secs)}`;
+      }
+      return `${day}-${month}-${year}`;
+    }
+    if (typeof val === 'number' && val >= 1 && val <= 100000) {
+      const utcDays = Math.floor(val - 25569);
+      const utcValue = utcDays * 86400;
+      const dateInfo = new Date(utcValue * 1000);
+      const fractionalDay = val - Math.floor(val) + 0.0000001;
+      let totalSeconds = Math.floor(86400 * fractionalDay);
+      const seconds = totalSeconds % 60;
+      totalSeconds -= seconds;
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor(totalSeconds / 60) % 60;
+      const pad = (n) => String(n).padStart(2, '0');
+      const day = pad(dateInfo.getUTCDate());
+      const month = pad(dateInfo.getUTCMonth() + 1);
+      const year = dateInfo.getUTCFullYear();
+      if (hours > 0 || minutes > 0 || seconds > 0) {
+        return `${day}-${month}-${year} ${pad(hours)}:${pad(mins)}:${pad(seconds)}`;
+      }
+      return `${day}-${month}-${year}`;
+    }
+    return String(val).trim();
+  }
+
+  function findSapColKey(rowObj, candidates) {
+    const keys = Object.keys(rowObj);
+    for (const cand of candidates) {
+      const target = cand.toUpperCase().replace(/[\s+/_.-]/g, '');
+      for (const key of keys) {
+        const cleaned = key.toUpperCase().replace(/[\s+/_.-]/g, '');
+        if (cleaned === target) return key;
+      }
+    }
+    return null;
+  }
+
+  function buildSapBatamRow(row, rowIndex) {
+    const codKey = findSapColKey(row, ['COD/CCOD', 'COD', 'CCOD', 'NILAI COD']);
+    const beaKey = findSapColKey(row, ['Total Bea', 'TotalBea', 'Ongkir', 'Bea', 'Total']);
+    const tglKey = findSapColKey(row, ['Tgl Kirim', 'Tanggal Kirim', 'TglKirim', 'Tanggal Pickup', 'Tgl Pickup']);
+    const refKey = findSapColKey(row, ['Info Referesnsi', 'Info Referensi', 'InfoReferensi', 'No Referensi', 'Referensi', 'No Ref']);
+    const penerimaKey = findSapColKey(row, ['Penerima', 'Nama Penerima', 'Nama']);
+    const resiKey = findSapColKey(row, ['No Resi', 'Nomor Resi', 'NoResi', 'Resi']);
+    const hpKey = findSapColKey(row, ['No HP', 'NoHP', 'Nomor HP', 'Telepon', 'No Telepon', 'Tlp Penerima']);
+    const alamatKey = findSapColKey(row, ['Alamat', 'Alamat Penerima']);
+    const deskKey = findSapColKey(row, ['Deskripsi', 'Keterangan Barang', 'Deskripsi Barang', 'Keterangan']);
+    const beratKey = findSapColKey(row, ['Berat', 'Berat Kiriman', 'Weight']);
+    const vaKey = findSapColKey(row, ['No VA', 'NoVA', 'Nomor VA', 'VA', 'Virtual Account']);
+    const statusKey = findSapColKey(row, ['Status', 'Update Status Pos', 'Update Status', 'Status Pos']);
+
+    const codRaw = codKey ? row[codKey] : 0;
+    const codClean = cleanSapNumber(codRaw);
+    const ongkirRaw = beaKey ? row[beaKey] : 0;
+    const ongkirClean = cleanSapNumber(ongkirRaw);
+    const tglKirim = tglKey ? normalizeSapDate(row[tglKey]) : '';
+    const rawBerat = beratKey && row[beratKey] !== undefined && row[beratKey] !== '' ? row[beratKey] : 1;
+    const beratVal = typeof rawBerat === 'number' ? rawBerat : (parseFloat(String(rawBerat).replace(/,/g, '.')) || rawBerat);
+    const resi = resiKey ? String(row[resiKey] || '').trim() : '';
+
+    const hpVal = hpKey && row[hpKey] !== undefined && row[hpKey] !== null && String(row[hpKey]).trim() !== '' && String(row[hpKey]).trim() !== '-'
+      ? String(row[hpKey]).replace(/\.0$/, '').trim()
+      : '';
+    const vaVal = vaKey && row[vaKey] !== undefined && row[vaKey] !== null && String(row[vaKey]).trim() !== ''
+      ? String(row[vaKey]).replace(/\.0$/, '').trim()
+      : '';
+
+    const excelRow = rowIndex + 2;
+    const linkFormula = `=HYPERLINK("https://kibananew.posindonesia.co.id:4433/x123449/xhdhhdencript12092003posaja.php?id="&F${excelRow}, "Klik Disini")`;
+
+    return {
+      'No': rowIndex + 1,
+      'Jenis Barang': codClean === 0 ? 'NON COD' : 'COD',
+      'Tanggal Pickup': tglKirim,
+      'No Referensi SAP': refKey ? String(row[refKey] || '').trim() : '',
+      'Nama Penerima': penerimaKey ? String(row[penerimaKey] || '').toUpperCase().trim() : '',
+      'No Resi Pos': resi,
+      'Ongkir Pos': ongkirClean,
+      'Tanggal Kirim Pos': tglKirim,
+      'Telepon Penerima': hpVal,
+      'Alamat': alamatKey ? String(row[alamatKey] || '').trim() : '',
+      'Keterangan Barang': deskKey ? String(row[deskKey] || '').trim() : '',
+      'Nilai COD': codClean,
+      'Berat': beratVal,
+      'Koli': beratVal,
+      'No VA': vaVal,
+      'Update Status Pos': statusKey ? String(row[statusKey] || '').trim() : '',
+      'Link Foto': linkFormula
+    };
+  }
+
+  function processSapBatamArray(dataArray) {
+    if (dataArray.length < 2) return [];
+    let headerIdx = -1;
+    for (let i = 0; i < Math.min(15, dataArray.length); i += 1) {
+      const row = Array.isArray(dataArray[i]) ? dataArray[i].map((v) => String(v || '').trim().toUpperCase()) : [];
+      if (row.includes('NO RESI') || row.includes('PENERIMA') || row.includes('COD/CCOD') || row.includes('TOTAL BEA')) {
+        headerIdx = i;
+        break;
+      }
+    }
+    if (headerIdx === -1) return [];
+
+    const headers = dataArray[headerIdx].map((h, idx) => String(h || `Col_${idx}`).trim());
+    const formatted = [];
+    let validRowIndex = 0;
+    for (let i = headerIdx + 1; i < dataArray.length; i += 1) {
+      const row = dataArray[i];
+      if (!row || row.length === 0 || row.every((c) => c === undefined || c === null || c === '')) continue;
+      const rowObj = {};
+      for (let c = 0; c < headers.length; c += 1) {
+        rowObj[headers[c]] = row[c] !== undefined ? row[c] : '';
+      }
+      const resiKey = findSapColKey(rowObj, ['No Resi', 'Nomor Resi', 'Resi']);
+      if (resiKey && rowObj[resiKey]) {
+        formatted.push(buildSapBatamRow(rowObj, validRowIndex));
+        validRowIndex += 1;
+      }
+    }
+    return formatted;
+  }
+
+  function processSapBatamCsv(rawText) {
+    const lines = rawText.split(/\r?\n/);
+    while (lines.length > 0) {
+      const upper = lines[0].toUpperCase();
+      if (upper.includes('NO RESI') || upper.includes('PENERIMA') || upper.includes('COD/CCOD') || upper.includes('TOTAL BEA')) break;
+      lines.shift();
+    }
+    if (lines.length === 0) return [];
+    const parsed = window.Papa.parse(lines.join('\n'), { header: true, skipEmptyLines: true });
+    if (parsed.errors && parsed.errors.some((err) => err.type === 'Quotes')) throw new Error('MALFORMED_CSV');
+    const formatted = [];
+    let validRowIndex = 0;
+    parsed.data.forEach((row) => {
+      const resiKey = findSapColKey(row, ['No Resi', 'Nomor Resi', 'Resi']);
+      if (resiKey && row[resiKey]) {
+        formatted.push(buildSapBatamRow(row, validRowIndex));
+        validRowIndex += 1;
+      }
+    });
+    return formatted;
+  }
+
   function fitToColumn(data) {
     if (!data || data.length === 0) return [];
     const headers = Object.keys(data[0]);
@@ -759,6 +950,7 @@
       const worksheet = window.XLSX.utils.json_to_sheet(state.finalData);
       worksheet['!cols'] = fitToColumn(state.finalData);
       worksheet['!autofilter'] = { ref: worksheet['!ref'] };
+      worksheet['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2', activePane: 'bottomLeft', state: 'frozen' };
       const range = window.XLSX.utils.decode_range(worksheet['!ref']);
       const headers = Object.keys(state.finalData[0]);
 
@@ -781,26 +973,37 @@
               alignment: { vertical: 'center', horizontal: 'left' },
               border: borderStyle('E5E8EE', 'E5E8EE')
             };
-            const textColumns = [
-              'Nomor Internal Order', 'Nomor Dokumen', 'No Resi', 'Nomor Resi', 'No HP', 'Tlp Pengirim', 'Tlp Penerima',
-              'Kodepos Tujuan', 'Virtual Account', 'NPWP/TIN Lawan Transaksi', 'Masa Pajak', 'ID', 'Nopend Asal',
-              'Nopend Tujuan', 'Kode pos Penerima', 'Nip/NIK', 'No VA', 'Norek ', 'Norek', 'ID Pelanggan'
-            ];
-            if (textColumns.includes(headerName)) {
+
+            if (typeof cell.v === 'string' && cell.v.startsWith('=')) {
+              cell.f = cell.v.slice(1);
+              cell.v = 'Klik Disini';
               cell.t = 's';
-              cell.v = String(cell.v);
-            } else if (cell.t === 'n') {
-              if (headerName === 'No' || headerName === 'Berat') {
-                cell.s.alignment.horizontal = 'center';
-              } else if (/tanggal|tgl|masa/i.test(headerName)) {
-                cell.s.alignment.horizontal = 'center';
-                cell.z = 'dd-mm-yyyy';
-                cell.s.numFmt = 'dd-mm-yyyy';
-              } else {
-                const pattern = cell.v % 1 !== 0 ? '#,##0.00' : '#,##0';
-                cell.z = pattern;
-                cell.s.numFmt = pattern;
-                cell.s.alignment.horizontal = 'right';
+              cell.s.alignment.horizontal = 'center';
+              cell.s.font.color = { rgb: '0563C1' };
+              cell.s.font.underline = true;
+            } else {
+              const textColumns = [
+                'Nomor Internal Order', 'Nomor Dokumen', 'No Resi', 'Nomor Resi', 'No HP', 'Tlp Pengirim', 'Tlp Penerima',
+                'Kodepos Tujuan', 'Virtual Account', 'NPWP/TIN Lawan Transaksi', 'Masa Pajak', 'ID', 'Nopend Asal',
+                'Nopend Tujuan', 'Kode pos Penerima', 'Nip/NIK', 'No VA', 'Norek ', 'Norek', 'ID Pelanggan',
+                'No Referensi SAP', 'No Resi Pos', 'Telepon Penerima', 'Jenis Barang', 'Update Status Pos'
+              ];
+              if (textColumns.includes(headerName)) {
+                cell.t = 's';
+                cell.v = String(cell.v);
+              } else if (cell.t === 'n') {
+                if (headerName === 'No' || headerName === 'Berat' || headerName === 'Koli') {
+                  cell.s.alignment.horizontal = 'center';
+                } else if (/tanggal|tgl|masa/i.test(headerName)) {
+                  cell.s.alignment.horizontal = 'center';
+                  cell.z = 'dd-mm-yyyy';
+                  cell.s.numFmt = 'dd-mm-yyyy';
+                } else {
+                  const pattern = cell.v % 1 !== 0 ? '#,##0.00' : '#,##0';
+                  cell.z = pattern;
+                  cell.s.numFmt = pattern;
+                  cell.s.alignment.horizontal = 'right';
+                }
               }
             }
           }
@@ -810,10 +1013,12 @@
       worksheet['!rows'] = [{ hpt: 30 }];
       const workbook = window.XLSX.utils.book_new();
       const config = MODES[state.mode];
-      window.XLSX.utils.book_append_sheet(workbook, worksheet, config.outputSheet);
-      window.XLSX.writeFile(workbook, config.outputFile, { compression: true });
+      const sheetName = typeof config.outputSheet === 'function' ? config.outputSheet() : config.outputSheet;
+      const fileName = typeof config.outputFile === 'function' ? config.outputFile() : config.outputFile;
+      window.XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+      window.XLSX.writeFile(workbook, fileName, { compression: true });
       markDownloadStep();
-      showToast('success', 'Unduhan dimulai', `${config.outputFile} sedang disimpan.`);
+      showToast('success', 'Unduhan dimulai', `${fileName} sedang disimpan.`);
     } catch (error) {
       setStatus('error', 'Gagal membuat file Excel', 'Coba tutup aplikasi lain atau kurangi jumlah file lalu proses ulang.');
       showToast('error', 'Ekspor gagal', friendlyError(error));
@@ -835,12 +1040,28 @@
   }
 
   function sortFinalData() {
-    const dateKey = state.mode === 'bukpot' ? 'Tanggal Bukti Potong' : state.mode === 'mileapp' ? 'Tgl Kirim' : state.mode === 'pranpp' ? 'Tanggal Transaksi' : null;
+    const dateKey = state.mode === 'bukpot'
+      ? 'Tanggal Bukti Potong'
+      : state.mode === 'mileapp'
+        ? 'Tgl Kirim'
+        : state.mode === 'pranpp'
+          ? 'Tanggal Transaksi'
+          : state.mode === 'sapbatam'
+            ? 'Tanggal Kirim Pos'
+            : null;
     state.finalData.sort((a, b) => {
       const first = dateKey ? a[dateKey] : (a['Tanggal Kirim'] || a['Tgl Kirim']);
       const second = dateKey ? b[dateKey] : (b['Tanggal Kirim'] || b['Tgl Kirim']);
       return parseDmyDate(first) - parseDmyDate(second);
     });
+
+    if (state.mode === 'sapbatam') {
+      state.finalData.forEach((row, idx) => {
+        row.No = idx + 1;
+        const excelRow = idx + 2;
+        row['Link Foto'] = `=HYPERLINK("https://kibananew.posindonesia.co.id:4433/x123449/xhdhhdencript12092003posaja.php?id="&F${excelRow}, "Klik Disini")`;
+      });
+    }
   }
 
   function renderAll() {
@@ -1084,7 +1305,7 @@
     const code = String(error && error.message ? error.message : error);
     const messages = {
       MODE_MISMATCH_HTML: 'File HTML/XLS Web hanya dapat diproses pada mode PRANPP atau PID.',
-      MODE_MISMATCH_EXCEL: 'File Excel asli hanya dapat diproses pada mode PRANPP atau PID.',
+      MODE_MISMATCH_EXCEL: 'File Excel asli hanya dapat diproses pada mode PRANPP, PID, atau Invoice SAP BATAM.',
       MODE_MISMATCH_PID: 'Mode PID memerlukan file Excel atau HTML hasil ekspor web.',
       PASSWORD_PROTECTED: 'File Excel dilindungi kata sandi dan tidak dapat dibaca.',
       CORRUPT_EXCEL: 'File Excel rusak atau formatnya tidak dikenali.',
@@ -1129,6 +1350,10 @@
 
   function formatCell(value) {
     if (value === undefined || value === null || value === '') return '—';
+    if (typeof value === 'string' && value.startsWith('=HYPERLINK')) {
+      const match = value.match(/,\s*"([^"]+)"\s*\)/);
+      return match ? match[1] : 'Klik Disini';
+    }
     if (typeof value === 'number') return value.toLocaleString('id-ID', { maximumFractionDigits: 2 });
     return String(value);
   }
